@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOP 対策 一問一答</title>
+<style>
+:root{
+  --bg:#f6f7f9; --panel:#ffffff; --panel2:#f0f2f5; --line:#dfe3e8;
+  --text:#1b1f24; --muted:#6b7280; --accent:#2f6feb; --accent-soft:#e8f0fe;
+  --ok:#12855b; --ok-soft:#e3f6ee; --ng:#c9333d; --ng-soft:#fdeaec;
+  --warn:#b7791f; --warn-soft:#fdf3e2; --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#14171c; --panel:#1c2027; --panel2:#242a33; --line:#333a45;
+    --text:#e7eaee; --muted:#9aa4b2; --accent:#6d9bff; --accent-soft:#22314f;
+    --ok:#4ade9a; --ok-soft:#16342a; --ng:#ff7b86; --ng-soft:#3a1f24;
+    --warn:#f0c060; --warn-soft:#3a2f18;
+  }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Kaku Gothic ProN","Yu Gothic UI",Meiryo,sans-serif;
+  font-size:15px;line-height:1.7;}
+header{position:sticky;top:0;z-index:20;background:var(--panel);border-bottom:1px solid var(--line);}
+.hd{max-width:900px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.logo{font-weight:700;font-size:16px;letter-spacing:.02em;white-space:nowrap}
+.logo span{color:var(--accent)}
+nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+nav button{background:transparent;border:1px solid transparent;color:var(--muted);padding:6px 12px;
+  border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit}
+nav button:hover{background:var(--panel2);color:var(--text)}
+nav button.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+main{max-width:900px;margin:0 auto;padding:18px 16px 80px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:14px}
+h2{font-size:16px;margin:0 0 12px}
+h3{font-size:14px;margin:18px 0 8px;color:var(--muted);font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 18px;border-radius:9px;
+  cursor:pointer;font-size:14px;font-weight:600;font-family:inherit}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sub{background:var(--panel2);color:var(--text);border:1px solid var(--line);font-weight:500}
+.btn.sm{padding:5px 11px;font-size:13px;font-weight:500}
+select,input[type=text]{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+  border-radius:8px;padding:7px 10px;font-size:14px;font-family:inherit}
+label.f{font-size:13px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+
+/* --- 出題 --- */
+.qmeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.tag{font-size:11.5px;padding:2px 9px;border-radius:99px;background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
+.tag.dom{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.tag.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+.tag.ng{background:var(--ng-soft);color:var(--ng);border-color:transparent}
+.tag.mk{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+.qtext{font-size:16px;line-height:1.85;white-space:pre-wrap;margin:6px 0 4px}
+.qen{font-size:13.5px;color:var(--muted);white-space:pre-wrap;margin:10px 0 0;padding-top:10px;border-top:1px dashed var(--line)}
+.hint{font-size:13px;color:var(--muted);margin:10px 0 6px}
+.choices{display:flex;flex-direction:column;gap:8px;margin:12px 0 0}
+.ch{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1px solid var(--line);
+  border-radius:10px;background:var(--panel2);cursor:pointer;transition:.12s;user-select:none}
+.ch:hover{border-color:var(--accent)}
+.ch.sel{border-color:var(--accent);background:var(--accent-soft)}
+.ch.rev-ok{border-color:var(--ok);background:var(--ok-soft)}
+.ch.rev-ng{border-color:var(--ng);background:var(--ng-soft)}
+.ch.rev-miss{border-style:dashed;border-color:var(--ok)}
+.ch .key{flex:0 0 26px;height:26px;border-radius:7px;background:var(--panel);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;font-size:12.5px;font-weight:700;color:var(--muted)}
+.ch.sel .key{background:var(--accent);color:#fff;border-color:transparent}
+.ch.rev-ok .key{background:var(--ok);color:#fff;border-color:transparent}
+.ch.rev-ng .key{background:var(--ng);color:#fff;border-color:transparent}
+.ch .txt{flex:1;white-space:pre-wrap}
+.ch .mark{font-size:12px;color:var(--muted);align-self:center}
+.verdict{margin-top:16px;padding:14px 16px;border-radius:10px;border:1px solid var(--line)}
+.verdict.ok{background:var(--ok-soft);border-color:var(--ok)}
+.verdict.ng{background:var(--ng-soft);border-color:var(--ng)}
+.vhead{font-size:17px;font-weight:700;margin-bottom:6px}
+.verdict.ok .vhead{color:var(--ok)} .verdict.ng .vhead{color:var(--ng)}
+.exp{white-space:pre-wrap;font-size:14.5px}
+.refs{margin-top:10px;font-size:13px;color:var(--muted)}
+.refs a{color:var(--accent)}
+.foot{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap;align-items:center}
+.pager{display:inline-flex;align-items:center;gap:4px}
+.pg{width:26px;height:26px;border-radius:7px;border:1px solid var(--line);background:var(--panel2);
+  color:var(--text);cursor:pointer;font-size:15px;line-height:1;font-family:inherit;padding:0}
+.pg:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.pg:disabled{opacity:.3;cursor:not-allowed}
+.pagerbar{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px}
+.spacer{flex:1}
+.pill{font-size:12.5px;color:var(--muted)}
+
+/* --- 一覧 --- */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12.5px;white-space:nowrap}
+tr.clickable:hover{background:var(--panel2);cursor:pointer}
+.qcell{max-width:420px}
+.trunc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* --- 統計 --- */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.stat .n{font-size:24px;font-weight:700;line-height:1.2}
+.stat .l{font-size:12px;color:var(--muted)}
+.bar{height:8px;border-radius:99px;background:var(--panel2);overflow:hidden;margin-top:5px}
+.bar>i{display:block;height:100%;background:var(--accent)}
+.bar>i.low{background:var(--ng)} .bar>i.mid{background:var(--warn)} .bar>i.high{background:var(--ok)}
+.dom-row{margin-bottom:12px}
+.dom-row .t{display:flex;justify-content:space-between;font-size:13.5px}
+.empty{color:var(--muted);text-align:center;padding:34px 10px}
+code{background:var(--panel2);padding:2px 6px;border-radius:5px;font-size:13px}
+.note{font-size:13px;color:var(--muted);line-height:1.8}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <div class="logo">DOP <span>一問一答</span></div>
+    <nav>
+      <button data-v="quiz" class="on">演習</button>
+      <button data-v="list">問題一覧</button>
+      <button data-v="stats">統計</button>
+      <button data-v="data">データ</button>
+    </nav>
+  </div>
+</header>
+<main>
+  <div id="view-quiz"></div>
+  <div id="view-list" hidden></div>
+  <div id="view-stats" hidden></div>
+  <div id="view-data" hidden></div>
+</main>
+
+<script>
+/* ==========================================================================
+   問題データ  ここに問題を追加していきます
+   --------------------------------------------------------------------------
+   type: "single" = 単一選択 / "multi" = 複数選択 / "order" = 並び替え
+   answer: single→["B"] / multi→["B","D"](順不同) / order→["C","A","B"](この順序が正解)
+   ========================================================================== */
+const QUESTIONS = [
+  {
+    id: "Q001",
+    domain: "モニタリングとロギング",
+    type: "single",
+    question: "ある企業は、アプリケーションロードバランサー（ALB）に対して HTTP API 呼び出しを行うモバイルアプリケーションを所有しています。ALB はリクエストを AWS Lambda 関数にルーティングします。アプリケーションには、一部のユーザーによるテスト中のバージョンを含め、常にさまざまなバージョンが使用されています。アプリケーションのバージョンは、API へのすべてのリクエストとともに送信される user-agent ヘッダーで定義されます。\n最近の一連の API 変更の後、同社はアプリケーションに問題が発生していることを確認しました。同社は、使用されているアプリケーションの各バージョンについて、応答コードごとに各 API 操作のメトリクスを収集する必要があります。DevOps エンジニアは、API 操作名、user-agent ヘッダーからのバージョン情報、および応答コードを抽出するように Lambda 関数を変更しました。\n\n必要なメトリクスを収集するために、DevOps エンジニアは他にどのようなアクションを実行する必要がありますか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"Lambda 関数を変更して、API 操作名、レスポンスコード、バージョン番号をログ行として Amazon CloudWatch Logs ロググループに書き込むようにします。各 API 操作名ごとにメトリクスをインクリメントする CloudWatch Logs メトリクスフィルタを設定します。メトリクスのディメンションとして、レスポンスコードとアプリケーションバージョンを指定します。" },
+      { id:"B", text:"Lambda 関数を変更して、API 操作名、レスポンスコード、バージョン番号をログ行として Amazon CloudWatch Logs ロググループに書き込むようにします。CloudWatch Logs Insights クエリを設定して、ログ行から CloudWatch メトリクスを取得します。メトリクスのディメンションとして、レスポンスコードとアプリケーションバージョンを指定します。" },
+      { id:"C", text:"ALB アクセスログを Amazon CloudWatch Logs ロググループに書き込むように設定します。Lambda 関数を変更して、API 操作名、応答コード、バージョン番号を応答メタデータとして ALB に応答するようにします。各 API 操作名に対してメトリクスをインクリメントする CloudWatch Logs メトリクスフィルタを設定します。メトリクスのディメンションとして、応答コードとアプリケーションバージョンを指定します。" },
+      { id:"D", text:"Lambda 関数で AWS X-Ray の統合を設定します。Lambda 関数を変更して、API 操作名、応答コード、およびバージョン番号を含む X-Ray サブセグメントを作成します。X-Ray Insights を設定して、各 API 操作名に対して集計メトリクスを抽出し、そのメトリクスを Amazon CloudWatch に公開します。メトリクスのディメンションとして、応答コードとアプリケーションバージョンを指定します。" }
+    ],
+    answer: ["A"],
+    explanation: "【正解 A】\nCloudWatch Logs の「メトリクスフィルタ」は、ロググループに書き込まれたログ行をパターンでフィルタし、一致した行をカスタムメトリクスとしてカウント（インクリメント）できます。さらにメトリクスフィルタでは、ログ行から抽出した値を最大 3 つまでディメンションとして指定できるため、「API 操作名のメトリクス × 応答コード × アプリケーションバージョン」という要件をそのまま満たせます。\nLambda 関数はすでに 3 つの値を抽出済みなので、あとは構造化ログ（JSON など）として CloudWatch Logs に出力し、メトリクスフィルタを設定するだけで完結します。\n\n【誤りの選択肢】\nB: CloudWatch Logs Insights は「その場でログをクエリして結果を見る」ための機能で、クエリ結果を継続的な CloudWatch メトリクスとして自動発行する仕組みではありません。ダッシュボードやアラームで使う恒常的なメトリクスは作れません。\n\nC: ALB のアクセスログは S3 バケットにのみ配信され、CloudWatch Logs へ直接書き込む設定はできません。また ALB アクセスログには Lambda が返した「応答メタデータ」は記録されないため、バージョン情報を取り出せません。\n\nD: X-Ray Insights は異常検知（anomaly detection）の機能であり、任意のサブセグメント属性から集計メトリクスを抽出して CloudWatch に公開する機能ではありません。要件に対して機能の使い方が誤っています。\n\n【覚えるポイント】\n・ログ行 → 継続的なカスタムメトリクス = CloudWatch Logs メトリクスフィルタ（ディメンション最大3つ）\n・Logs Insights = アドホックな調査用クエリ。メトリクス化はしない\n・ALB / CloudFront / S3 のアクセスログ = 配信先は S3",
+    refs: [
+      { label:"CloudWatch Logs メトリクスフィルタでディメンションを使用する", url:"https://docs.aws.amazon.com/ja_jp/AmazonCloudWatch/latest/logs/CountOccurrencesExample.html" },
+      { label:"ALB のアクセスログ（配信先は S3）", url:"https://docs.aws.amazon.com/ja_jp/elasticloadbalancing/latest/application/load-balancer-access-logs.html" }
+    ]
+  },
+  {
+    id: "Q002",
+    domain: "耐障害性の高いクラウドソリューション",
+    type: "single",
+    question: "ある企業が顧客にアプリケーションを提供しています。このアプリケーションには、AWS Lambda 関数を呼び出す Amazon API Gateway REST API があります。初期化時に、Lambda 関数は Amazon DynamoDB テーブルから大量のデータをロードします。このデータロード処理により、コールドスタート時間が 8〜10 秒と長くなります。DynamoDB テーブルには DynamoDB Accelerator (DAX) が構成されています。\n顧客からは、アプリケーションがリクエストへの応答に断続的に時間がかかるという報告があります。アプリケーションは 1 日を通して数千件のリクエストを受け取ります。日中は、他の時間帯の 10 倍のリクエストが発生します。1 日の終わり近くになると、アプリケーションのリクエスト量は通常の合計の 10% に減少します。\nDevOps エンジニアは、1 日を通して Lambda 関数のレイテンシを削減する必要があります。\n\nこれらの要件を満たすソリューションはどれですか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"Lambda 関数で、同時実行数を 1 に設定してプロビジョニングされた同時実行を構成します。DynamoDB テーブルの DAX クラスターを削除します。" },
+      { id:"B", text:"Lambda 関数の同時実行予約を、同時実行値 0 で設定します。" },
+      { id:"C", text:"Lambda 関数でプロビジョニングされた同時実行数を設定します。Lambda 関数で AWS Application Auto Scaling を設定し、プロビジョニングされた同時実行数の値を最小 1、最大 100 に設定します。" },
+      { id:"D", text:"Lambda 関数で予約済み同時実行数を設定します。API Gateway API で AWS Application Auto Scaling を設定し、予約済み同時実行数の最大値を 100 に設定します。" }
+    ],
+    answer: ["C"],
+    explanation: "【正解 C】\n問題の本質は「初期化に 8〜10 秒かかるコールドスタート」です。これを解消する AWS の標準機能が **プロビジョニングされた同時実行 (Provisioned Concurrency)** です。実行環境を事前に初期化済みの状態で待機させるため、初期化コード（DynamoDB からの大量データロード）がリクエスト到達時には完了しており、コールドスタートが発生しません。\nさらに本問はトラフィックの変動が大きい（日中は他の時間帯の 10 倍、夜間は 10%）という条件があります。固定値では日中に不足し、夜間は無駄なコストになります。そこで **Application Auto Scaling** をプロビジョニングされた同時実行に適用し、最小 1・最大 100 の範囲で自動的にスケールさせることで、1 日を通してレイテンシを抑えられます。\n\n【誤りの選択肢】\nA: プロビジョニングされた同時実行を 1 に固定すると、日中のピーク時に大半のリクエストがコールドスタートになります。また DAX の削除は DynamoDB の読み取りを遅くするだけで、レイテンシ改善に逆行します。\n\nB: 予約済み同時実行 (Reserved Concurrency) を 0 にすると、関数の呼び出しがすべてスロットリングされ、関数が実行できなくなります。完全に逆効果です。\n\nD: 予約済み同時実行は「その関数が使える同時実行数の上限を確保する」機能であり、実行環境を温めておく機能ではないためコールドスタートは解消しません。また Application Auto Scaling は API Gateway の予約済み同時実行を対象にできません（設定対象が誤り）。\n\n【覚えるポイント】\n・Provisioned Concurrency（プロビジョニングされた同時実行）= 実行環境を事前初期化 → **コールドスタート対策**。Application Auto Scaling で min/max を設定可能\n・Reserved Concurrency（予約済み同時実行）= 同時実行数の**枠の確保・上限設定**。0 にすると呼び出し停止（緊急停止用途）\n・「コールドスタートが長い」と出たら、まず Provisioned Concurrency を疑う",
+    refs: [
+      { label:"Lambda のプロビジョニングされた同時実行の設定", url:"https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/provisioned-concurrency.html" },
+      { label:"Lambda の予約済み同時実行", url:"https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/configuration-concurrency.html" }
+    ]
+  },
+  {
+    id: "Q003",
+    domain: "SDLC の自動化",
+    type: "single",
+    question: "ある企業が、Java-Apache Tomcat アプリケーションと Apache Web サーバーを用いたアプリケーションデプロイを自動化するために、AWS CodeDeploy を採用しています。開発チームはまず概念実証を行い、開発環境用のデプロイグループを作成し、アプリケーション内で機能テストを実施しました。テスト完了後、ステージング環境と本番環境用にデプロイグループを追加作成する予定です。\n現在のログレベルは Apache の設定で構成されていますが、デプロイ時にこの構成を動的に変更することで、デプロイグループごとに異なるログレベル構成を設定できるようにしたいと考えています。各デプロイグループごとに異なるスクリプトバージョンを用意することなく、管理オーバーヘッドを最小限に抑えつつ、これらの要件を満たすにはどうすればよいでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"Amazon EC2 インスタンスに、デプロイメントグループに応じたタグを付けます。次に、メタデータサービスと EC2 API を呼び出してインスタンスがどのデプロイメントグループに属しているかを識別するスクリプトをアプリケーションリビジョンに配置します。この情報を使用してログレベルの設定を構成します。appspec.yml ファイルの AfterInstall ライフサイクルフックの一部として、このスクリプトを参照します。" },
+      { id:"B", text:"CodeDeploy 環境変数 DEPLOYMENT_GROUP_NAME を使用して、インスタンスが属するデプロイメントグループを識別するスクリプトを作成します。この情報を使用してログレベルの設定を構成します。appspec.yml ファイルの BeforeInstall ライフサイクルフックの一部として、このスクリプトを参照します。" },
+      { id:"C", text:"各環境ごとに CodeDeploy のカスタム環境変数を作成します。次に、この環境変数をチェックしてインスタンスがどのデプロイメントグループに属しているかを識別するスクリプトをアプリケーションリビジョンに配置します。この情報を使用してログレベルの設定を構成します。appspec.yml ファイルの ValidateService ライフサイクルフックの一部として、このスクリプトを参照します。" },
+      { id:"D", text:"CodeDeploy 環境変数 DEPLOYMENT_GROUP_ID を使用して、インスタンスが属するデプロイメントグループを識別し、ログレベルの設定を構成するスクリプトを作成します。このスクリプトを appspec.yml ファイルの Install ライフサイクルフックの一部として参照します。" }
+    ],
+    answer: ["B"],
+    explanation: "【正解 B】\nCodeDeploy はライフサイクルフックのスクリプト実行時に、以下の環境変数を自動的に提供します。\n・APPLICATION_NAME … アプリケーション名\n・DEPLOYMENT_ID … デプロイ ID\n・DEPLOYMENT_GROUP_NAME … デプロイグループ名（例: Dev / Staging / Production）\n・DEPLOYMENT_GROUP_ID … デプロイグループ ID\n・LIFECYCLE_EVENT … 実行中のライフサイクルイベント名\n\nスクリプト内で DEPLOYMENT_GROUP_NAME を参照して分岐すれば、**1本の共通スクリプト**のまま環境ごとに異なるログレベルを設定できます。追加のタグ管理も API 呼び出しも不要で、管理オーバーヘッドが最小になります。BeforeInstall はアプリケーションファイル配置前の準備処理を行う適切なフックです。\n\n【誤りの選択肢】\nA: 動作はしますが、EC2 のタグ付けを別途管理し、インスタンスメタデータと EC2 API を呼び出す実装が必要になります。IAM 権限も追加で必要で、CodeDeploy が標準で環境変数を提供している以上、明らかに管理オーバーヘッドが大きく「最小限」に反します。\n\nC: CodeDeploy には「環境ごとにカスタム環境変数を定義する」機能はありません（提供されるのは上記の組み込み変数のみ）。また ValidateService はデプロイ完了後の検証用フックであり、設定変更のタイミングとして不適切です。\n\nD: **Install は CodeDeploy エージェントが予約しているライフサイクルイベントで、ユーザーがスクリプトを指定することはできません。** appspec.yml の hooks セクションに Install は記述できないため、この構成は成立しません。\n\n【覚えるポイント】\n・デプロイグループごとに挙動を変えたい → 組み込み環境変数 **DEPLOYMENT_GROUP_NAME** で分岐（スクリプトは1本）\n・**Install / DownloadBundle の 2 つはユーザーがスクリプトを指定できない予約イベント**\n・EC2/オンプレのフック順序: ApplicationStop → DownloadBundle → BeforeInstall → **Install** → AfterInstall → ApplicationStart → ValidateService\n・「管理オーバーヘッド最小」と出たら、サービスの組み込み機能で済む選択肢を選ぶ",
+    refs: [
+      { label:"CodeDeploy: フック用スクリプトで使用できる環境変数", url:"https://docs.aws.amazon.com/ja_jp/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html#reference-appspec-file-structure-environment-variable-availability" },
+      { label:"CodeDeploy: AppSpec の hooks セクション（ライフサイクルイベント順序）", url:"https://docs.aws.amazon.com/ja_jp/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html" }
+    ]
+  },
+  {
+    id: "Q004",
+    domain: "セキュリティとコンプライアンス",
+    type: "single",
+    question: "ある企業では、開発者に対し、アカウント内のすべての Amazon Elastic Block Store (Amazon EBS) ボリュームに、希望するバックアップ頻度を示すタグを付けるよう求めています。この要件には、バックアップが不要な EBS ボリュームも含まれます。同社は、希望するバックアップ頻度に対応する none、daily、weekly の値を持つ Backup_Frequency というカスタムタグを使用しています。監査の結果、開発者が EBS ボリュームにタグを付けていないケースが時々あることが判明しました。\nDevOps エンジニアは、別の値が指定されない限り、少なくとも週に一度バックアップを実行できるように、すべての EBS ボリュームに常に Backup_Frequency タグが付いていることを確認する必要があります。\n\nこれらの要件を満たすソリューションはどれでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"アカウントで AWS Config を設定します。バックアップ頻度タグが適用されていないすべての Amazon EC2 リソースに対してコンプライアンス違反を返すカスタムルールを作成します。カスタム AWS Systems Manager Automation ランブックを使用して、Backup_Frequency タグを weekly の値で適用する修復アクションを設定します。" },
+      { id:"B", text:"アカウントで AWS Config を設定します。バックアップ頻度タグが適用されていない EC2::Volume リソースに対してコンプライアンス違反を返すマネージドルールを使用します。カスタム AWS Systems Manager Automation ランブックを使用して、Backup_Frequency タグを weekly の値で適用する修復アクションを設定します。" },
+      { id:"C", text:"アカウントで AWS CloudTrail を有効にします。EBS CreateVolume イベントに反応する Amazon EventBridge ルールを作成します。カスタム AWS Systems Manager Automation ランブックを設定し、Backup_Frequency タグの値を weekly に設定します。このランブックをルールのターゲットとして指定します。" },
+      { id:"D", text:"アカウントで AWS CloudTrail を有効にします。EBS CreateVolume イベントまたは EBS ModifyVolume イベントに反応する Amazon EventBridge ルールを作成します。カスタム AWS Systems Manager Automation ランブックを設定し、Backup_Frequency タグの値を weekly に設定します。このランブックをルールのターゲットとして指定します。" }
+    ],
+    answer: ["B"],
+    explanation: "【正解 B】\nAWS Config には **required-tags** というマネージドルールが用意されており、指定したタグキー（ここでは Backup_Frequency）が付いていないリソースを非準拠として検出できます。このルールは対象リソースタイプを **AWS::EC2::Volume** に絞り込めるため、カスタムルール（Lambda 実装）を書く必要がありません。\nさらに AWS Config の **修復アクション (Remediation Action)** に Systems Manager Automation ランブックを紐付ければ、非準拠を検出した際に自動で Backup_Frequency=weekly を付与できます。\n重要なのは、AWS Config が **既存のすべてのリソースも評価対象にする** 点です。設定した時点でタグの無い既存ボリュームも検出・修復されるため、「すべての EBS ボリュームに常にタグが付いている」という要件を満たせます。\n\n【誤りの選択肢】\nA: 動作はしますが、required-tags というマネージドルールが既に存在するのにカスタムルール（Lambda 関数の実装・保守）を作るのは不要な手間です。また対象を「すべての EC2 リソース」に広げているため、EBS ボリューム以外まで非準拠として大量に検出してしまいます。\n\nC: CloudTrail + EventBridge は **これから作成されるボリュームにしか反応しません**。監査で見つかった既存の未タグ付けボリュームは修復されません。さらに、後からタグを削除されたケースも検知できません。\n\nD: C と同じ問題に加え、**ModifyVolume はボリュームのサイズ・タイプ・IOPS を変更する API であり、タグの変更とは無関係**です（タグ操作は CreateTags / DeleteTags）。イベントの選択自体が誤っています。\n\n【覚えるポイント】\n・タグ付け必須の統制 → **AWS Config マネージドルール required-tags**（対象リソースタイプを絞れる）\n・検出だけでなく自動で直したい → **AWS Config の修復アクション + SSM Automation ランブック**\n・**AWS Config = 既存リソースも含めた継続的な評価**／**EventBridge = イベント発生時のみ**。「既存も含めてすべて」と書かれていたら Config を選ぶ\n・ModifyVolume はサイズ/タイプ/IOPS の変更。タグは CreateTags / DeleteTags",
+    refs: [
+      { label:"AWS Config マネージドルール: required-tags", url:"https://docs.aws.amazon.com/ja_jp/config/latest/developerguide/required-tags.html" },
+      { label:"AWS Config: 非準拠リソースの修復", url:"https://docs.aws.amazon.com/ja_jp/config/latest/developerguide/remediation.html" }
+    ]
+  },
+  {
+    id: "Q005",
+    domain: "耐障害性の高いクラウドソリューション",
+    type: "single",
+    question: "ある企業が、アプリケーションのデータストアとして Amazon Aurora クラスターを使用しています。Aurora クラスターは単一の DB インスタンスで構成されています。アプリケーションは、クラスターのインスタンスエンドポイントを使用してデータベースへの読み取りおよび書き込み操作を実行します。\n同社は、近日中に予定されているメンテナンス期間中にクラスターへのアップデートを適用する予定です。メンテナンス期間中、クラスターは可能な限り中断を最小限に抑えて稼働状態を維持する必要があります。\n\nDevOps エンジニアは、これらの要件を満たすためにどのような対応を取るべきでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"Aurora クラスタにリーダーインスタンスを追加します。書き込み操作に Aurora クラスタのエンドポイントを使用するようにアプリケーションを更新します。読み取り操作用に Aurora クラスタのリーダーエンドポイントを更新します。" },
+      { id:"B", text:"Aurora クラスタにリーダーインスタンスを追加します。クラスタ用にカスタム ANY エンドポイントを作成します。アプリケーションを更新して、読み取りおよび書き込み操作に Aurora クラスタのカスタム ANY エンドポイントを使用するようにします。" },
+      { id:"C", text:"Aurora クラスタでマルチ AZ オプションを有効にします。アプリケーションを更新して、書き込み操作に Aurora クラスタのエンドポイントを使用するようにします。読み取り操作用に Aurora クラスタのリーダーエンドポイントを更新します。" },
+      { id:"D", text:"Aurora クラスターでマルチ AZ オプションを有効にします。クラスター用にカスタム ANY エンドポイントを作成します。アプリケーションを更新して、読み取りおよび書き込み操作に Aurora クラスターのカスタム ANY エンドポイントを使用するようにします。" }
+    ],
+    answer: ["A"],
+    explanation: "【正解 A】\n問題点は 2 つあります。\n① クラスターに DB インスタンスが 1 つしかない → メンテナンスでその 1 台が再起動すると DB が完全に停止する\n② アプリが **インスタンスエンドポイント**（特定の 1 台に直結するエンドポイント）を使っている → フェイルオーバーが起きても接続先が切り替わらない\n\nこの両方を解決するのが A です。**リーダーインスタンス（Aurora レプリカ）を別 AZ に追加**すれば、ライターがメンテナンスされる際にリーダーが自動的に昇格してフェイルオーバーします。そして接続先を用途別の正しいエンドポイントに変更します。\n・**クラスターエンドポイント（ライターエンドポイント）** … 常に現在のライターインスタンスを指す。フェイルオーバー後も自動的に新ライターへ追従する → 書き込み用\n・**リーダーエンドポイント** … 複数のリーダーへ接続を分散する → 読み取り用\n\n【誤りの選択肢】\nB: **カスタム ANY エンドポイントはライター・リーダーを区別せず任意のインスタンスに接続します。** リーダーに振られた接続で書き込みを行うとエラーになるため、書き込み操作には使えません。\n\nC: Aurora には RDS のような「マルチ AZ オプションを有効にする」というトグルはありません。Aurora の**ストレージは元々 3 つの AZ に 6 個のコピーとして自動複製されており**、可用性を上げる操作は「別 AZ に Aurora レプリカ（リーダーインスタンス）を追加する」ことです。エンドポイントの使い分け自体は正しいものの、前段の操作が誤りです。\n\nD: C の誤り（マルチ AZ オプション）と B の誤り（ANY エンドポイントで書き込み）の両方を含んでいます。\n\n【覚えるポイント】\n・Aurora のエンドポイント 3 種類\n　- **クラスター（ライター）エンドポイント** = 常にライターを指す。**書き込みはこれ**\n　- **リーダーエンドポイント** = リーダー群へ負荷分散。**読み取りはこれ**\n　- **カスタムエンドポイント** = 指定したインスタンス群。ANY タイプはライター/リーダーを区別しない → 書き込み用途には不可\n・**インスタンスエンドポイント**は特定の 1 台に固定されるため、フェイルオーバーに追従できない。アプリから直接使うのはアンチパターン\n・Aurora の可用性向上 = 「マルチ AZ を有効化」ではなく「**別 AZ に Aurora レプリカを追加**」",
+    refs: [
+      { label:"Amazon Aurora の接続管理（エンドポイントの種類）", url:"https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/AuroraUserGuide/Aurora.Overview.Endpoints.html" },
+      { label:"Aurora の高可用性とフェイルオーバー", url:"https://docs.aws.amazon.com/ja_jp/AmazonRDS/latest/AuroraUserGuide/Concepts.AuroraHighAvailability.html" }
+    ]
+  },
+  {
+    id: "Q006",
+    domain: "セキュリティとコンプライアンス",
+    type: "multi",
+    pick: 3,
+    question: "企業は、アカウント間で共有するすべての AMI を暗号化する必要があります。DevOps エンジニアは、暗号化されていないカスタム AMI が構築されたソースアカウントにアクセスできます。また、DevOps エンジニアは、Amazon EC2 Auto Scaling グループが AMI から EC2 インスタンスを起動するターゲットアカウントにもアクセスできます。DevOps エンジニアは、ターゲットアカウントと AMI を共有する必要があります。\n企業は、ソースアカウントに AWS Key Management Service（AWS KMS）キーを作成しました。\n\n要件を満たすために、DevOps エンジニアはどのような追加手順を実行する必要がありますか？（3つ選択してください）",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"ソースアカウントで、暗号化されていない AMI を暗号化された AMI にコピーします。コピーアクションで KMS キーを指定します。" },
+      { id:"B", text:"ソースアカウントで、暗号化されていない AMI を暗号化された AMI にコピーします。コピーアクションで、デフォルトの Amazon Elastic Block Store（Amazon EBS）暗号化キーを指定します。" },
+      { id:"C", text:"ソースアカウントで、ターゲットアカウントの Auto Scaling グループのサービスリンクロールに権限を委任する KMS グラントを作成します。" },
+      { id:"D", text:"ソースアカウントで、キーポリシーを変更して、ターゲットアカウントにグラントを作成する権限を付与します。ターゲットアカウントで、Auto Scaling グループのサービスリンクロールに権限を委任する KMS グラントを作成します。" },
+      { id:"E", text:"ソースアカウントで、暗号化されていない AMI をターゲットアカウントと共有します。" },
+      { id:"F", text:"ソースアカウントで、暗号化された AMI をターゲットアカウントと共有します。" }
+    ],
+    answer: ["A","D","F"],
+    explanation: "【正解 A・D・F】\n暗号化 AMI をクロスアカウント共有し、ターゲット側の Auto Scaling グループから起動させる手順は次の 3 ステップです。\n\n**A: カスタマー管理 KMS キーを指定して AMI をコピー**\n既存の AMI は暗号化されていないため、まず暗号化されたコピーを作ります。このとき企業が作成した**カスタマー管理キー（CMK）**を指定するのが必須です。\n\n**F: 暗号化された AMI をターゲットアカウントと共有**\n要件が「共有するすべての AMI を暗号化する」なので、共有するのは暗号化済みのコピーです。\n\n**D: キーポリシー変更 + ターゲット側でグラント作成**\nターゲットアカウントの Auto Scaling は、**サービスリンクロール (AWSServiceRoleForAutoScaling)** を使って EC2 を起動します。このロールが KMS キーを使えなければインスタンスは起動しません。\nそこでソースアカウントで**キーポリシー**を変更してターゲットアカウントに kms:CreateGrant 等を許可し、**ターゲットアカウント側でサービスリンクロールに対する KMS グラントを作成**します。グラントの作成はグラントを必要とするプリンシパルを持つアカウント（＝ターゲット側）で行うのが正しい流れです。\n\n【誤りの選択肢】\nB: **デフォルトの EBS 暗号化キー（aws/ebs）は AWS マネージドキーであり、他アカウントと共有できません。** このキーで暗号化したスナップショット／AMI はクロスアカウント共有が不可能です。暗号化 AMI を共有する場合は必ずカスタマー管理キー（CMK）を使います。\n\nC: サービスリンクロールはターゲットアカウントに存在するプリンシパルです。ソースアカウント側だけでグラントを作る構成は成立せず、正しくは D のようにキーポリシーで委任 → ターゲット側でグラント作成という手順を踏みます。\n\nE: 暗号化されていない AMI をそのまま共有しており、「共有するすべての AMI を暗号化する」という要件に真っ向から反します。\n\n【覚えるポイント】\n・**AWS マネージドキー（aws/ebs など）はクロスアカウント共有不可。共有するなら必ず CMK**\n・暗号化 AMI の共有 = ①CMK でコピーして暗号化 → ②AMI を共有 → ③KMS キーの使用権限を相手に与える、の 3 点セット\n・Auto Scaling が暗号化 AMI から起動するには、**サービスリンクロールに対する KMS グラント**が必要\n・キーポリシーでの許可（アカウント単位の委任）と、グラント（個々のプリンシパルへの委任）の役割分担を理解しておく",
+    refs: [
+      { label:"Auto Scaling: 暗号化された AMI／EBS ボリュームに必要な KMS キーポリシーとグラント", url:"https://docs.aws.amazon.com/ja_jp/autoscaling/ec2/userguide/key-policy-requirements-EBS-encryption.html" },
+      { label:"AMI の共有（暗号化された AMI の要件）", url:"https://docs.aws.amazon.com/ja_jp/AWSEC2/latest/UserGuide/sharingamis-explicit.html" }
+    ]
+  },
+  {
+    id: "Q007",
+    domain: "SDLC の自動化",
+    type: "multi",
+    pick: 2,
+    question: "ある企業は、AWS CodePipeline パイプラインを使用してアプリケーションのリリースを自動化しています。一般的なパイプラインは、ビルド、テスト、デプロイの 3 つのステージで構成されています。同社はこれまで、各ステージのスクリプトを実行するために個別の AWS CodeBuild プロジェクトを使用していました。しかし、同社はパイプラインのデプロイステージを処理するために AWS CodeDeploy を使用したいと考えています。\n同社はアプリケーションを RPM パッケージとしてパッケージ化しており、Amazon EC2 インスタンスのフリートにアプリケーションをデプロイする必要があります。EC2 インスタンスは EC2 Auto Scaling グループに属し、共通の AMI から起動されます。\n\nDevOps エンジニアは、これらの要件を満たすために、どの手順の組み合わせを実行する必要がありますか？（2 つ選択してください）",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"CodeDeploy エージェントがインストールされた共通 AMI の新しいバージョンを作成します。CodeDeploy へのアクセスを許可するように、EC2 インスタンスの IAM ロールを更新します。" },
+      { id:"B", text:"CodeDeploy エージェントがインストールされた共通 AMI の新しいバージョンを作成します。アプリケーションデプロイスクリプトを含み、CodeDeploy へのアクセス権限を付与する AppSpec ファイルを作成します。" },
+      { id:"C", text:"CodeDeploy でアプリケーションを作成します。インプレースデプロイメントタイプを設定します。デプロイメントターゲットとして Auto Scaling グループを指定します。CodePipeline パイプラインにステップを追加し、EC2 Image Builder を使用して新しい AMI を作成します。CodeDeploy を設定して、新しく作成した AMI をデプロイします。" },
+      { id:"D", text:"CodeDeploy でアプリケーションを作成します。インプレースデプロイメントタイプを設定します。デプロイメントターゲットとして Auto Scaling グループを指定します。CodeDeploy アクションを使用してアプリケーションをデプロイするように CodePipeline パイプラインを更新します。" },
+      { id:"E", text:"CodeDeploy でアプリケーションを作成します。インプレースデプロイタイプを設定します。共通 AMI から起動される EC2 インスタンスをデプロイターゲットとして指定します。CodePipeline パイプラインを更新し、CodeDeploy アクションを使用してアプリケーションをデプロイするようにします。" }
+    ],
+    answer: ["A","D"],
+    explanation: "【正解 A・D】\nCodeDeploy で EC2 にデプロイするために必要なのは、大きく「**ターゲット側の準備**」と「**CodeDeploy 側の設定**」の 2 つです。\n\n**A: ターゲット側の準備**\n・EC2 インスタンスに **CodeDeploy エージェント**が入っていなければデプロイできません。ASG は共通 AMI から起動するので、エージェント入りの AMI を新しく作るのが確実です（スケールアウトで増えたインスタンスにも自動で入る）。\n・EC2 の **IAM インスタンスプロファイル**に、CodeDeploy がアーティファクトを置く S3 バケットからの取得権限などが必要です。\n\n**D: CodeDeploy 側の設定**\n・CodeDeploy アプリケーションとデプロイグループを作り、**インプレースデプロイ**を選択。\n・デプロイターゲットに **Auto Scaling グループを指定**します。これにより、スケールアウトで新規に起動したインスタンスにも自動的に最新リビジョンがデプロイされます。\n・CodePipeline のデプロイステージを CodeBuild アクションから **CodeDeploy アクション**に差し替えます。\n\n【誤りの選択肢】\nB: **AppSpec ファイルは権限を付与するものではありません。** appspec.yml はファイルの配置先とライフサイクルフックで実行するスクリプトを定義するだけで、IAM 権限とは無関係です。権限は EC2 の IAM ロールで与えます。\n\nC: 要件は「RPM パッケージを既存の EC2 フリートにデプロイする」ことであり、AMI を作り直して入れ替える必要はありません。EC2 Image Builder を挟むのは過剰で、CodeDeploy を使う本問の趣旨からも外れています。\n\nE: デプロイターゲットに**個々の EC2 インスタンス（タグ指定）**を使うと、Auto Scaling でスケールアウトした新しいインスタンスにアプリがデプロイされません。ASG 構成では**デプロイグループのターゲットに Auto Scaling グループを指定する**のが正解です。\n\n【覚えるポイント】\n・CodeDeploy on EC2 の前提 = ①**CodeDeploy エージェント**、②EC2 の **IAM インスタンスプロファイル**、③CodeDeploy サービスロール\n・**AppSpec ファイル = 配置先とフックの定義。権限付与の機能はない**\n・ASG が絡んだら、デプロイグループのターゲットは**個別インスタンスではなく Auto Scaling グループ**（スケールアウト時の自動デプロイのため）\n・インプレース = 既存インスタンスを更新／ブルーグリーン = 新しいインスタンス群に入れ替え",
+    refs: [
+      { label:"CodeDeploy エージェントの使用開始と前提条件", url:"https://docs.aws.amazon.com/ja_jp/codedeploy/latest/userguide/getting-started-prerequisites.html" },
+      { label:"CodeDeploy と Auto Scaling グループの統合", url:"https://docs.aws.amazon.com/ja_jp/codedeploy/latest/userguide/integrations-aws-auto-scaling.html" }
+    ]
+  },
+  {
+    id: "Q008",
+    domain: "セキュリティとコンプライアンス",
+    type: "multi",
+    pick: 2,
+    question: "企業のセキュリティチームは、すべての外部アプリケーションロードバランサー（ALB）と Amazon API Gateway API が AWS WAF ウェブ ACL に関連付けられていることを要求しています。この企業は数百の AWS アカウントを所有しており、それらはすべて AWS Organizations の単一の組織に含まれています。企業は組織に対して AWS Config を設定済みです。監査中に、企業は AWS WAF ウェブ ACL に関連付けられていない外部向け ALB がいくつかあることを発見しました。\n\nDevOps エンジニアは、今後の違反を防ぐために、どのような手順の組み合わせを取るべきでしょうか？（2 つ選択してください）",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"AWS Firewall Manager をセキュリティアカウントに委任します。" },
+      { id:"B", text:"Amazon GuardDuty をセキュリティアカウントに委任する。" },
+      { id:"C", text:"AWS Firewall Manager ポリシーを作成し、新しく作成された ALB および API Gateway API に AWS WAF の Web ACL をアタッチします。" },
+      { id:"D", text:"Amazon GuardDuty ポリシーを作成し、AWS WAF の Web ACL を新しく作成された ALB および API Gateway API にアタッチします。" },
+      { id:"E", text:"AWS Config マネージドルールを設定して、新しく作成された ALB および API Gateway API に AWS WAF Web ACL をアタッチします。" }
+    ],
+    answer: ["A","C"],
+    explanation: "【正解 A・C】\n**AWS Firewall Manager** は、AWS Organizations 配下の全アカウント・全リージョンにまたがって、WAF ウェブ ACL・セキュリティグループ・AWS Shield Advanced・Network Firewall などを**一元的に適用し続ける**ためのサービスです。数百アカウント規模で「必ず WAF が付いている状態」を維持するのに最適です。\n\n**A: Firewall Manager 管理者アカウントの委任**\nFirewall Manager を使うには、組織の管理アカウントから**特定のアカウントを Firewall Manager 管理者として委任**する必要があります（セキュリティ用アカウントに委任するのが定石）。これが前提手順です。\n\n**C: Firewall Manager ポリシーの作成**\nWAF タイプの Firewall Manager ポリシーを作成し、対象リソースタイプに ALB と API Gateway を指定します。ポリシーは**自動修復（auto-remediation）**に対応しており、新しく作成されたリソースにも自動でウェブ ACL がアタッチされます。既存の未関連付けリソースも修復対象にできます。\n\n【誤りの選択肢】\nB・D: **GuardDuty は脅威検出サービス**であり、リソースに WAF ウェブ ACL をアタッチする機能はありません。「GuardDuty ポリシー」というものも存在しません。\n\nE: **AWS Config マネージドルールは「準拠しているかを評価する」だけで、リソースを変更する機能はありません。** ウェブ ACL のアタッチには別途 SSM Automation による修復アクションが必要で、選択肢の記述だけでは成立しません。また数百アカウントに対して Config ルール＋修復を個別展開するより、Firewall Manager の方が本来の用途に合致します。\n\n【覚えるポイント】\n・**組織全体に WAF / セキュリティグループ / Shield Advanced を強制 → AWS Firewall Manager**\n・Firewall Manager の前提: ①AWS Organizations（全機能有効）②**管理者アカウントの委任** ③AWS Config が有効\n・Firewall Manager ポリシーは**新規リソースへの自動適用**ができる（＝「今後の違反を防ぐ」に直結）\n・**AWS Config = 検出（評価）**／**Firewall Manager = 強制適用**。Config 単体では直せない\n・GuardDuty = 脅威検出、Security Hub = 統合的なセキュリティ状況の集約。混同しないこと",
+    refs: [
+      { label:"AWS Firewall Manager の前提条件（管理者アカウントの委任）", url:"https://docs.aws.amazon.com/ja_jp/waf/latest/developerguide/fms-prereq.html" },
+      { label:"AWS WAF ポリシー（Firewall Manager）の作成", url:"https://docs.aws.amazon.com/ja_jp/waf/latest/developerguide/security-policy-waf.html" }
+    ]
+  },
+  {
+    id: "Q009",
+    domain: "セキュリティとコンプライアンス",
+    type: "single",
+    question: "ある企業は、規制遵守要件を満たすために、AWS Key Management Service (AWS KMS) キーと手動キーローテーションを使用しています。セキュリティチームは、90 日間ローテーションされていないキーがある場合に通知を受け取りたいと考えています。\n\nこれを実現するソリューションはどれでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"AWS KMS を設定し、キーの発行から 90 日以上経過した場合に Amazon Simple Notification Service (Amazon SNS) トピックに情報を公開するようにします。" },
+      { id:"B", text:"Amazon EventBridge イベントを設定して、AWS Lambda 関数を起動し、AWS Trusted Advisor API を呼び出して Amazon Simple Notification Service (Amazon SNS) トピックに情報を公開します。" },
+      { id:"C", text:"キーの発行から 90 日以上経過した場合に、Amazon Simple Notification Service (Amazon SNS) トピックにパブリッシュする AWS Config カスタムルールを作成します。" },
+      { id:"D", text:"キーの発行から 90 日以上経過した場合に、AWS Security Hub が Amazon Simple Notification Service（Amazon SNS）トピックに通知を送信するように設定します。" }
+    ],
+    answer: ["C"],
+    explanation: "【正解 C】\n「手動ローテーション」かつ「90 日」という**独自の判定条件**がポイントです。AWS Config には KMS 関連のマネージドルール（例: cmk-backing-key-rotation-enabled）がありますが、これは**自動ローテーションが有効かどうか**を見るだけで、「最後のローテーションから何日経過したか」は判定できません。\nそこで **AWS Config カスタムルール**（Lambda 関数で評価ロジックを実装）を作成し、キーの作成日／最終ローテーション日から 90 日以上経過したキーを非準拠として評価します。非準拠を検出したら EventBridge 経由、または Config の通知設定から SNS トピックへ通知できます。\n\n【誤りの選択肢】\nA: **AWS KMS 自体に「キーの経過日数を監視して SNS に通知する」機能はありません。** KMS は鍵の管理・暗号化操作を行うサービスであり、そのような監視機能は提供していません。\n\nB: **AWS Trusted Advisor に KMS キーのローテーション期間をチェックする項目はありません。** Trusted Advisor はコスト最適化・パフォーマンス・セキュリティ・耐障害性・サービスクォータの観点でベストプラクティスを確認するサービスで、KMS キーの経過日数は対象外です。\n\nD: **Security Hub は各種セキュリティサービスの検出結果を集約するサービス**であり、「キー発行から 90 日経過」というカスタム条件を自分で定義して評価する仕組みはありません。Security Hub のセキュリティ標準チェックも内部的には AWS Config ルールに依存しています。\n\n【覚えるポイント】\n・**マネージドルールで表現できない独自条件 → AWS Config カスタムルール（Lambda で評価）**\n・KMS のローテーション: **自動ローテーション**は AWS 管理（既定 365 日周期、カスタマー管理キーで有効化可能）。**手動ローテーション**は新しいキーを作ってエイリアスを付け替える運用で、経過日数の監視は自前で行う必要がある\n・Trusted Advisor = ベストプラクティスの定型チェック。任意条件の評価には使えない\n・Security Hub = 検出結果の集約・可視化。評価ロジックそのものは持たない",
+    refs: [
+      { label:"AWS Config カスタムルール", url:"https://docs.aws.amazon.com/ja_jp/config/latest/developerguide/evaluate-config_develop-rules.html" },
+      { label:"AWS KMS のキーのローテーション", url:"https://docs.aws.amazon.com/ja_jp/kms/latest/developerguide/rotate-keys.html" }
+    ]
+  },
+  {
+    id: "Q010",
+    domain: "セキュリティとコンプライアンス",
+    type: "single",
+    question: "セキュリティレビューの結果、AWS CodeBuild プロジェクトが認証されていないリクエストを使用して Amazon S3 バケットからデータベース投入スクリプトをダウンロードしていることが判明しました。セキュリティチームは、このプロジェクトにおいて S3 バケットへの認証されていないリクエストを許可していません。\n\nこの問題を最も安全な方法で修正するにはどうすればよいでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"CodeBuild プロジェクト設定の AllowedBuckets セクションにバケット名を追加します。ビルド仕様を更新して、AWS CLI を使用してデータベース投入スクリプトをダウンロードするようにします。" },
+      { id:"B", text:"S3 バケットの設定を変更して HTTPS 基本認証を有効にし、トークンを指定します。ビルド仕様を更新して、cURL を使用してトークンを渡し、データベースへのデータ投入スクリプトをダウンロードするようにします。" },
+      { id:"C", text:"バケットポリシーを使用して、S3 バケットへの認証されていないアクセスを削除します。CodeBuild プロジェクトのサービスロールを変更して、Amazon S3 へのアクセス権限を追加します。AWS CLI を使用して、データベースへのデータ投入スクリプトをダウンロードします。" },
+      { id:"D", text:"バケットポリシーを使用して、S3 バケットへの認証されていないアクセスを削除します。AWS CLI を使用して、IAM アクセスキーとシークレットアクセスキーを使用してデータベース投入スクリプトをダウンロードします。" }
+    ],
+    answer: ["C"],
+    explanation: "【正解 C】\nAWS における「最も安全な」アクセス方法の原則は、**長期的な認証情報（アクセスキー）を使わず、IAM ロールによる一時的な認証情報を使う**ことです。\nCodeBuild は実行時に**サービスロール**を引き受けるため、そのロールに S3 の GetObject 権限を付与すれば、ビルド内の AWS CLI は自動的に一時認証情報を使って認証済みリクエストを行います。あわせてバケットポリシーで匿名（未認証）アクセスを拒否すれば、要件を満たしつつ最小権限を維持できます。\n\n【誤りの選択肢】\nA: **CodeBuild のプロジェクト設定に「AllowedBuckets」というセクションは存在しません。** 架空の設定項目です。\n\nB: **Amazon S3 は HTTPS 基本認証（Basic 認証）をサポートしていません。** S3 の認証は AWS Signature Version 4 による署名で行われます。\n\nD: バケットポリシーの修正は正しいものの、**IAM アクセスキーとシークレットアクセスキーという長期の認証情報をビルド環境に持ち込む**点が問題です。漏洩リスクがあり、ローテーション運用の負担も生じます。サービスロールが使える環境で静的キーを使うのはアンチパターンで、「最も安全な方法」にはなりません。\n\n【覚えるポイント】\n・**「最も安全」と問われたら、アクセスキーではなく IAM ロール（一時認証情報）**。CodeBuild ならサービスロール、EC2 ならインスタンスプロファイル、Lambda なら実行ロール\n・S3 の認証は SigV4。Basic 認証やトークンヘッダーといった選択肢は誤り\n・選択肢に出てくる「それらしい設定項目名」が実在するかを疑う（AllowedBuckets は架空）\n・匿名アクセスの遮断はバケットポリシー（+ パブリックアクセスブロック）で行う",
+    refs: [
+      { label:"CodeBuild のサービスロール", url:"https://docs.aws.amazon.com/ja_jp/codebuild/latest/userguide/setting-up.html#setting-up-service-role" },
+      { label:"Amazon S3 のリクエストの認証（Signature Version 4）", url:"https://docs.aws.amazon.com/ja_jp/AmazonS3/latest/API/sig-v4-authenticating-requests.html" }
+    ]
+  },
+  {
+    id: "Q011",
+    domain: "セキュリティとコンプライアンス",
+    type: "multi",
+    pick: 3,
+    question: "ある e コマース企業が、新しいプラットフォームのホスティングに AWS を選択しました。同社の DevOps チームは、AWS Control Tower ランディングゾーンの構築を開始しました。DevOps チームは、AWS IAM Identity Center（AWS Single Sign-On）内の ID ストアを外部 ID プロバイダー（IdP）に設定し、SAML 2.0 を構成しました。\nDevOps チームは、最小権限の原則を適用する堅牢なアクセス許可モデルを求めています。このモデルでは、チームが自身のリソースのみを構築および管理できるようにする必要があります。\n\nこれらの要件を満たす手順の組み合わせはどれですか？（3 つ選択してください）",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"必要な権限を含む IAM ポリシーを作成します。条件キーとして aws:PrincipalTag を含めます。" },
+      { id:"B", text:"アクセス許可セットを作成します。必要なアクセス許可を含むインラインポリシーを添付し、aws:PrincipalTag 条件キーを使用してアクセス許可の範囲を指定します。" },
+      { id:"C", text:"IdP でグループを作成します。ユーザーをグループに追加します。IAM Identity Center で、グループをアカウントと権限セットに割り当てます。" },
+      { id:"D", text:"IdP でグループを作成します。ユーザーをグループに追加します。グループを OU と IAM ポリシーに割り当てます。" },
+      { id:"E", text:"IAM Identity Center でアクセス制御用の属性を有効にします。ユーザーにタグを適用します。タグをキーと値のペアとしてマッピングします。" },
+      { id:"F", text:"IAM Identity Center でアクセス制御用の属性を有効にします。IdP からの属性をキーと値のペアとしてマッピングします。" }
+    ],
+    answer: ["B","C","F"],
+    explanation: "【正解 B・C・F】\nこれは IAM Identity Center における **ABAC（属性ベースのアクセス制御）** の典型的な構成問題です。「チームが自身のリソースのみを管理できる」を最小権限で実現するには、ユーザーの属性（所属チームなど）とリソースのタグを突き合わせる ABAC が最適です。\n\n**F: アクセス制御用の属性を有効化し、IdP の属性をマッピング**\nIAM Identity Center の「**属性ベースのアクセスコントロール（ABAC）**」機能を有効にします。ID ソースが**外部 IdP（SAML 2.0）**なので、属性は IdP 側から SAML アサーションで渡されます。これをキーと値のペアとしてマッピングすることで、セッションタグとして利用できるようになります。\n\n**B: アクセス許可セット（Permission Set）にポリシーを定義**\nIAM Identity Center で権限を定義する単位は **アクセス許可セット**です。ここにインラインポリシーを添付し、`aws:PrincipalTag/Team` などの条件キーでリソースのタグと一致する場合のみ操作を許可するようにします。これにより 1 つのアクセス許可セットで全チームをカバーでき、チーム数が増えてもポリシーを増やす必要がありません。\n\n**C: IdP でグループを作り、Identity Center でアカウントとアクセス許可セットに割り当て**\nユーザーの管理は IdP のグループで行い、IAM Identity Center 側で「どのグループを・どの AWS アカウントに・どのアクセス許可セットで」割り当てるかを定義します。これが Identity Center の標準的な割り当てモデルです。\n\n【誤りの選択肢】\nA: IAM Identity Center では**スタンドアロンの IAM ポリシーではなくアクセス許可セット**を使って権限を定義します。条件キーの考え方自体は正しいものの、適用する器が誤っています。\n\nD: **グループを「OU」や「IAM ポリシー」に直接割り当てる仕組みはありません。** 割り当て先は「AWS アカウント × アクセス許可セット」です。\n\nE: ユーザーに直接タグを適用する方式は、**ID ソースが IAM Identity Center 自身の ID ストアである場合**の手順です。本問は外部 IdP（SAML 2.0）を ID ソースにしているため、属性は IdP から渡すのが正しく、F が該当します。\n\n【覚えるポイント】\n・IAM Identity Center の権限の単位 = **アクセス許可セット（Permission Set）**。IAM ポリシーを直接ユーザーに付けるのではない\n・割り当ての形 = **「ユーザー／グループ」×「AWS アカウント」×「アクセス許可セット」**\n・**ABAC** = 属性（セッションタグ）とリソースタグを `aws:PrincipalTag/<key>` で突き合わせる。ポリシー数を増やさずスケールできるのが利点\n・属性の供給元は ID ソース次第。**外部 IdP なら IdP の属性をマッピング**／**Identity Center の ID ストアならユーザーの属性（タグ）を設定**",
+    refs: [
+      { label:"IAM Identity Center の属性ベースのアクセスコントロール（ABAC）", url:"https://docs.aws.amazon.com/ja_jp/singlesignon/latest/userguide/abac.html" },
+      { label:"IAM Identity Center のアクセス許可セット", url:"https://docs.aws.amazon.com/ja_jp/singlesignon/latest/userguide/permissionsetsconcept.html" }
+    ]
+  },
+  {
+    id: "Q012",
+    domain: "インシデントとイベントへの対応",
+    type: "multi",
+    pick: 2,
+    question: "ある e コマース企業から、注文履歴ページに注文処理状況が反映されるのに遅延が発生しているという報告を受けています。注文処理システムは、予約済み同時実行を使用する AWS Lambda 関数で構成されています。この Lambda 関数は、Amazon Simple Queue Service（Amazon SQS）キューから注文メッセージを処理し、処理済みの注文を Amazon DynamoDB テーブルに挿入します。DynamoDB テーブルでは、読み取りと書き込みの容量について自動スケーリングが有効になっています。\n\nこの遅延を解消するために、DevOps エンジニアはどのような対策を講じるべきでしょうか？（2 つ選択してください）",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"SQS キューの ApproximateAgeOfOldestMessage メトリクスを確認してください。Lambda 関数の同時実行制限を増やしてください。" },
+      { id:"B", text:"SQS キューの ApproximateAgeOfOldestMessage メソッドを確認し、SQS キューで再ドライブポリシーを設定します。" },
+      { id:"C", text:"SQS キューの NumberOfMessagesSent メトリクスを確認します。SQS キューの可視性タイムアウトを延長します。" },
+      { id:"D", text:"DynamoDB テーブルの WriteThrottleEvents メトリクスを確認します。テーブルのスケーリングポリシーの最大書き込み容量ユニット（WCU）を増やします。" },
+      { id:"E", text:"Lambda 関数の Throttles メトリクスを確認します。Lambda 関数のタイムアウトを長くします。" }
+    ],
+    answer: ["A","D"],
+    explanation: "【正解 A・D】\n遅延の原因は、処理パイプラインの「詰まっている箇所」を特定して広げることで解消します。本問では 2 つのボトルネック候補があります。\n\n**A: Lambda 側のボトルネック**\n`ApproximateAgeOfOldestMessage`（キュー内で最も古いメッセージの滞留時間）は、**消費が生産に追いついていない**ことを示す代表的なメトリクスです。この値が伸びている場合、**予約済み同時実行の値が処理能力の上限になっている**可能性が高いため、同時実行制限を引き上げて並列処理数を増やします。\n\n**D: DynamoDB 側のボトルネック**\n`WriteThrottleEvents` は書き込みがスロットリングされた回数を示します。Auto Scaling が有効でも、**スケーリングポリシーの上限（最大 WCU）に張り付いている**とそれ以上スケールできません。書き込みがスロットルされると Lambda 側でリトライが発生し、結果としてキューの滞留と遅延につながります。上限 WCU を引き上げるのが対策です。\n\n【誤りの選択肢】\nB: 再ドライブポリシー（**デッドレターキューの設定**）は、処理に繰り返し失敗したメッセージを隔離するための仕組みです。**スループットは上がらず、遅延の解消にはなりません。** また「メトリクス」ではなく「メソッド」と書かれている点も誤りです。\n\nC: `NumberOfMessagesSent` は**キューに送信されたメッセージ数**であり、滞留の指標にはなりません。また可視性タイムアウトの延長は「処理中のメッセージが他のコンシューマーに見えない時間」を延ばすだけで、処理速度は上がりません（むしろ失敗時の再処理が遅くなります）。\n\nE: `Throttles` の確認自体は有効ですが、対策が誤りです。**スロットリングは同時実行数の不足が原因**なので、引き上げるべきは同時実行数であってタイムアウトではありません。タイムアウトは 1 回の実行が長引く場合の設定です。\n\n【覚えるポイント】\n・**SQS の滞留を見るメトリクスは `ApproximateAgeOfOldestMessage`**（+ `ApproximateNumberOfMessagesVisible`）。「処理が追いついていない」の指標\n・**Lambda の `Throttles` → 同時実行数を上げる**。タイムアウトの調整では解決しない\n・**DynamoDB の `WriteThrottleEvents` / `ReadThrottleEvents` → 容量不足**。Auto Scaling 有効でも**上限値**に達していれば頭打ちになる\n・DLQ（再ドライブポリシー）は**失敗メッセージの隔離**であり、性能改善策ではない",
+    refs: [
+      { label:"Amazon SQS の CloudWatch メトリクス", url:"https://docs.aws.amazon.com/ja_jp/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-available-cloudwatch-metrics.html" },
+      { label:"DynamoDB Auto Scaling", url:"https://docs.aws.amazon.com/ja_jp/amazondynamodb/latest/developerguide/AutoScaling.html" }
+    ]
+  },
+  {
+    id: "Q013",
+    domain: "セキュリティとコンプライアンス",
+    type: "single",
+    question: "ある企業は、単一の AWS リージョンで数百の Amazon EC2 インスタンスを実行する単一の AWS アカウントを所有しています。このアカウントでは、1 時間ごとに新しい EC2 インスタンスが起動および終了します。また、このアカウントには、1 週間以上実行されている既存の EC2 インスタンスも含まれています。\n企業のセキュリティポリシーでは、実行中のすべての EC2 インスタンスに EC2 インスタンスプロファイルを使用することが義務付けられています。インスタンスプロファイルがアタッチされていない EC2 インスタンスは、IAM 権限が割り当てられていないデフォルトのインスタンスプロファイルを使用する必要があります。\nDevOps エンジニアがアカウントをレビューしたところ、インスタンスプロファイルなしで実行されている EC2 インスタンスが見つかりました。レビュー中に、DevOps エンジニアは、インスタンスプロファイルなしで新しい EC2 インスタンスが起動されていることも確認しました。\n\nリージョン内の既存および将来のすべての EC2 インスタンスにインスタンスプロファイルがアタッチされるようにするには、どのソリューションを使用すればよいでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"EC2 RunInstances API 呼び出しに反応する Amazon EventBridge ルールを設定します。このルールを設定して、AWS Lambda 関数を呼び出し、デフォルトのインスタンスプロファイルを EC2 インスタンスにアタッチします。" },
+      { id:"B", text:"ec2-instance-profile-attached AWS Config マネージドルールを、設定変更をトリガータイプとして設定します。AWS Systems Manager Automation ランブックを呼び出してデフォルトのインスタンスプロファイルを EC2 インスタンスにアタッチする自動修復アクションを設定します。" },
+      { id:"C", text:"EC2 StartInstances API 呼び出しに反応する Amazon EventBridge ルールを設定します。ルールを設定して、AWS Systems Manager Automation ランブックを呼び出し、デフォルトのインスタンスプロファイルを EC2 インスタンスにアタッチします。" },
+      { id:"D", text:"設定変更をトリガータイプとして、AWS Config マネージドルール iam-role-managed-policy-check を設定します。AWS Lambda 関数を呼び出してデフォルトのインスタンスプロファイルを EC2 インスタンスにアタッチする自動修復アクションを設定します。" }
+    ],
+    answer: ["B"],
+    explanation: "【正解 B】\n要件は「**既存**および**将来**のすべての EC2 インスタンス」をカバーすることです。ここが最大の判断ポイントになります。\n\nAWS Config には **ec2-instance-profile-attached** というマネージドルールがあり、EC2 インスタンスにインスタンスプロファイルがアタッチされているかを評価します。\n・トリガータイプを「**設定変更**」にすると、新しく起動したインスタンスも即座に評価されます\n・AWS Config は**設定した時点で既存のリソースも評価**するため、1 週間以上前から動いているインスタンスもカバーできます\n・**自動修復アクション**に SSM Automation ランブックを設定すれば、非準拠を検出した際にデフォルトのインスタンスプロファイルを自動でアタッチできます\n\n【誤りの選択肢】\nA: `RunInstances` イベントに反応する構成は**新規に起動されるインスタンスしかカバーできません。** すでに実行中の既存インスタンスは永久に修復されず、要件の半分しか満たせません。\n\nC: `StartInstances` は**停止していたインスタンスを開始する API** です。新規起動（RunInstances）でも既存の実行中インスタンスでもないため、カバー範囲がさらに狭くなります。\n\nD: **`iam-role-managed-policy-check` は「指定した管理ポリシーが IAM ロールにアタッチされているか」を確認するルール**であり、EC2 インスタンスプロファイルの有無とは無関係です。ルール名が要件と噛み合っていません。\n\n【覚えるポイント】\n・**「既存 + 将来のすべて」と書かれたら AWS Config**（既存リソースも評価対象）。EventBridge はイベント発生時のみで既存分を拾えない\n・EC2 インスタンスプロファイルの準拠チェック = マネージドルール **ec2-instance-profile-attached**\n・検出 → 自動修正の型: **AWS Config ルール + 修復アクション（SSM Automation ランブック）**\n・`RunInstances`（新規起動）と `StartInstances`（停止からの再開）は別物。混同しやすい",
+    refs: [
+      { label:"AWS Config マネージドルール: ec2-instance-profile-attached", url:"https://docs.aws.amazon.com/ja_jp/config/latest/developerguide/ec2-instance-profile-attached.html" },
+      { label:"AWS Config: 非準拠リソースの修復", url:"https://docs.aws.amazon.com/ja_jp/config/latest/developerguide/remediation.html" }
+    ]
+  },
+  {
+    id: "Q014",
+    domain: "SDLC の自動化",
+    type: "single",
+    question: "DevOps エンジニアが、AWS Lambda 関数を使用するサーバーレスアプリケーションの継続的デプロイメントパイプラインを構築しています。同社は、デプロイメントの失敗による顧客への影響を最小限に抑えたいと考えています。また、問題の監視も行いたいと考えています。\n\nこれらの要件を満たすデプロイメントステージ構成はどれでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"AWS Serverless Application Model (AWS SAM) テンプレートを使用して、サーバーレスアプリケーションを定義します。AWS CodeDeploy を使用して、デプロイ設定タイプを Canary10Percent15Minutes に設定し、Lambda 関数をデプロイします。Amazon CloudWatch アラームを使用して、関数の健全性を監視します。" },
+      { id:"B", text:"AWS CloudFormation を使用して新しいスタックの更新を公開し、すべてのリソースに Amazon CloudWatch アラームを含めます。開発者が AWS CloudFormation の変更セットを検証および承認するための AWS CodePipeline 承認アクションを設定します。" },
+      { id:"C", text:"AWS CloudFormation を使用して、スタックの更新ごとに新しいバージョンを公開し、すべてのリソースに Amazon CloudWatch アラームを含めます。スタックの更新中にトラフィックルーティングを更新するには、AWS::Lambda::Alias リソースの RoutingConfig プロパティを使用します。" },
+      { id:"D", text:"AWS CodeBuild を使用して、テスト用のサンプルイベントペイロードを Lambda 関数に追加します。関数の新しいバージョンを公開し、Amazon CloudWatch アラームを含めます。本番環境のエイリアスを更新して、新しいバージョンを指すようにします。アラームが ALARM 状態になったときにロールバックが発生するように設定します。" }
+    ],
+    answer: ["A"],
+    explanation: "【正解 A】\n「デプロイ失敗の顧客影響を最小化」＋「問題の監視」という 2 つの要件を、**AWS SAM + CodeDeploy の段階的デプロイ（Gradual Deployment）**が一括で満たします。\n\nSAM テンプレートの `AutoPublishAlias` と `DeploymentPreference` を設定すると、CodeDeploy が Lambda エイリアスの**加重ルーティング**を自動的に制御します。`Canary10Percent15Minutes` は「まず新バージョンに 10% のトラフィックを流し、15 分間問題がなければ残り 90% を切り替える」という設定で、**問題があっても影響を受けるのは 10% のユーザーだけ**です。\nさらに `Alarms` プロパティに CloudWatch アラームを指定すれば、**デプロイ中にアラームが発報した時点で自動的に旧バージョンへロールバック**されます。監視と安全なデプロイが 1 つの仕組みで実現できるため、これが最適解です。\n\n【誤りの選択肢】\nB: **CodePipeline の手動承認アクションは人間の確認を挟むだけ**で、デプロイ後の障害から顧客を守る仕組みではありません。変更セットの承認後に一括切り替えが行われるため、問題があれば全ユーザーに影響します。「顧客への影響を最小限に」という要件を満たしません。\n\nC: `AWS::Lambda::Alias` の `RoutingConfig` を使えば加重ルーティング自体は可能ですが、**トラフィックの割合を段階的に増やす制御も、アラーム発報時の自動ロールバックも自前で実装する必要があります。** CloudFormation スタック更新の中では自動的に進行しないため、要件を満たすには運用負荷が大きすぎます。\n\nD: **エイリアスを新バージョンに一括で切り替えており、段階的な移行になっていません。** 問題が起きた瞬間に全ユーザーが影響を受けます。また「アラーム発報時にロールバック」の部分も自前実装が必要です。\n\n【覚えるポイント】\n・**Lambda の安全なデプロイ = SAM の `DeploymentPreference` + CodeDeploy**（内部でエイリアスの加重ルーティングを制御）\n・デプロイ設定タイプの型を覚える\n　- `Canary10Percent15Minutes` … 10% を流して 15 分待ち、問題なければ全量\n　- `Linear10PercentEvery10Minutes` … 10 分ごとに 10% ずつ増やす\n　- `AllAtOnce` … 一括切り替え（段階的でない）\n・`Alarms` プロパティ = **デプロイ中にアラームが発報したら自動ロールバック**。これが「監視」要件への回答\n・SAM では `AutoPublishAlias` を指定することでバージョン発行とエイリアス更新が自動化される",
+    refs: [
+      { label:"AWS SAM: Lambda アプリケーションの段階的デプロイ", url:"https://docs.aws.amazon.com/ja_jp/serverless-application-model/latest/developerguide/automating-updates-to-serverless-apps.html" },
+      { label:"CodeDeploy: Lambda のデプロイ設定", url:"https://docs.aws.amazon.com/ja_jp/codedeploy/latest/userguide/deployment-configurations.html#deployment-configuration-lambda" }
+    ]
+  },
+  {
+    id: "Q015",
+    domain: "構成管理と IaC",
+    type: "single",
+    question: "アプリケーションを実行するために、DevOps エンジニアはパブリックサブネット内のパブリック IP アドレスを持つ Amazon EC2 インスタンスを起動します。ユーザーデータスクリプトは、起動時にアプリケーションアーティファクトを取得し、インスタンスにインストールします。アプリケーションのセキュリティ分類が変更されたため、インスタンスはインターネットにアクセスできない状態で実行する必要があります。インスタンスは正常に起動し、正常と表示されますが、アプリケーションがインストールされていないようです。\n\n新しいルールに準拠しながらアプリケーションを正常にインストールするには、次のうちどれを使用すればよいでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"Elastic IP アドレスを割り当てられたパブリックサブネットでインスタンスを起動します。アプリケーションのインストールと実行が完了したら、スクリプトを実行して Elastic IP アドレスの関連付けを解除します。" },
+      { id:"B", text:"NAT ゲートウェイを設定します。EC2 インスタンスをプライベートサブネットにデプロイします。プライベートサブネットのルーティングテーブルを更新し、デフォルトルートとして NAT ゲートウェイを使用するように設定します。" },
+      { id:"C", text:"アプリケーション成果物を Amazon S3 バケットに公開し、S3 用の VPC エンドポイントを作成します。EC2 インスタンスに IAM インスタンスプロファイルを割り当てて、S3 バケットからアプリケーション成果物を読み取れるようにします。" },
+      { id:"D", text:"アプリケーションインスタンス用のセキュリティグループを作成し、アーティファクトリポジトリへの送信トラフィックのみを許可するように設定します。インストールが完了したら、セキュリティグループのルールを削除します。" }
+    ],
+    answer: ["C"],
+    explanation: "【正解 C】\n要件は「**インターネットにアクセスできない状態で実行する**」ことです。同時に、起動時にはアーティファクトを取得する必要があります。この 2 つを両立させるのが **S3 用の VPC エンドポイント（ゲートウェイエンドポイント）** です。\nVPC エンドポイントを使うと、EC2 からの S3 へのトラフィックは**インターネットゲートウェイや NAT を経由せず、AWS 内部のネットワークだけで完結**します。インスタンスはインターネットに一切出ないまま、アーティファクトをダウンロードできます。\nあわせて EC2 に IAM インスタンスプロファイルを割り当てれば、認証済みで S3 から取得でき、アクセスキーも不要です。\n\n【誤りの選択肢】\nA: インストール中は Elastic IP を付けており、**その間はインターネットにアクセスできる状態**になっています。要件に反しますし、後から外すという運用も脆弱です。\n\nB: **NAT ゲートウェイはプライベートサブネットからインターネットへ出るための仕組み**です。プライベートサブネットに置いても、NAT 経由でインターネットにアクセスできてしまうため「インターネットにアクセスできない状態」という要件を満たしません。\n\nD: **セキュリティグループはアウトバウンドを絞るだけで、経路そのものはインターネット経由のまま**です。また「インストール後にルールを削除する」という運用は、Auto Scaling などで新しいインスタンスが起動するたびに破綻します。\n\n【覚えるポイント】\n・**「インターネットにアクセスさせずに AWS サービスを使う」= VPC エンドポイント**\n　- **ゲートウェイエンドポイント**（無料）… S3、DynamoDB のみ。ルートテーブルにエントリが追加される\n　- **インターフェイスエンドポイント（PrivateLink）**… その他多数のサービス。ENI が作られ、時間課金\n・**NAT ゲートウェイはインターネットに出る仕組み**。「インターネット遮断」の要件では誤答になる\n・セキュリティグループでの制限は「経路を変える」ものではない\n・プライベート環境で SSM Session Manager や CodeDeploy を使う場合も、同様にインターフェイスエンドポイントが必要になる",
+    refs: [
+      { label:"Amazon S3 のゲートウェイエンドポイント", url:"https://docs.aws.amazon.com/ja_jp/vpc/latest/privatelink/vpc-endpoints-s3.html" },
+      { label:"VPC エンドポイントの種類", url:"https://docs.aws.amazon.com/ja_jp/vpc/latest/privatelink/concepts.html" }
+    ]
+  },
+  {
+    id: "Q016",
+    domain: "SDLC の自動化",
+    type: "single",
+    question: "開発チームは、アプリケーションコードのバージョン管理に AWS CodeCommit を、ソフトウェアのデプロイメントのオーケストレーションに AWS CodePipeline を使用しています。チームは、コード変更を統合するためのパイプラインのトリガーとして、リモートのメインブランチを使用することにしました。開発者がコード変更を CodeCommit リポジトリにプッシュしましたが、10 分経過してもパイプラインに反応がないことに気づきました。\n\nこの問題をトラブルシューティングするには、次のうちどの操作を行うべきでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"パイプラインをトリガーするために、メインブランチ用に Amazon EventBridge ルールが作成されていることを確認してください。" },
+      { id:"B", text:"CodePipeline サービスロールに CodeCommit リポジトリへのアクセス権限があることを確認します。" },
+      { id:"C", text:"開発者の IAM ロールに CodeCommit リポジトリへのプッシュ権限があることを確認します。" },
+      { id:"D", text:"Amazon CloudWatch Logs で、CodeCommit エラーが原因でパイプラインの起動に失敗したかどうかを確認します。" }
+    ],
+    answer: ["A"],
+    explanation: "【正解 A】\n症状は「**パイプラインがまったく起動しない**」ことです。まず切り分けるべきは「起動しなかった」のか「起動したが失敗した」のかで、本問は前者です。\nCodeCommit をソースとする CodePipeline は、**Amazon EventBridge ルールがリポジトリの指定ブランチへのコミットを検知してパイプラインを起動する**仕組みになっています（旧称 CloudWatch Events）。したがって、この EventBridge ルールが存在しない・無効化されている・対象ブランチの指定が誤っている場合、いくらプッシュしてもパイプラインは反応しません。まずここを確認するのが正しい切り分けです。\n\n【誤りの選択肢】\nB: サービスロールの権限不足であれば、**パイプライン自体は起動した上でソースステージが失敗します。** コンソール上に赤いエラーが表示されるはずで、「反応がない」という症状とは合致しません。\n\nC: 問題文に「開発者がコード変更を CodeCommit リポジトリに**プッシュしました**」と明記されています。**プッシュは成功しているため、プッシュ権限は問題ではありません。**\n\nD: **CodePipeline の起動失敗は CloudWatch Logs には記録されません。** パイプラインの実行履歴はコンソールや CodePipeline の API で確認します。そもそも起動していないため、調べる先として不適切です。\n\n【覚えるポイント】\n・**CodeCommit → CodePipeline の起動は EventBridge ルール経由**。「パイプラインが反応しない」の第一容疑者\n・CodePipeline のソース検出方式\n　- **EventBridge（推奨・既定）** … 即座に起動\n　- **定期ポーリング** … 最大数分の遅延。パイプライン作成方法によってはこちらになる\n・トラブルシュートの切り分け: 「**起動しない**」= トリガー／イベントの問題、「**起動したが失敗**」= 権限や設定の問題\n・GitHub など外部リポジトリの場合は CodeStar Connections（現 AWS CodeConnections）経由になる",
+    refs: [
+      { label:"CodePipeline: CodeCommit ソースの EventBridge 検出", url:"https://docs.aws.amazon.com/ja_jp/codepipeline/latest/userguide/triggering.html" },
+      { label:"CodePipeline のトラブルシューティング", url:"https://docs.aws.amazon.com/ja_jp/codepipeline/latest/userguide/troubleshooting.html" }
+    ]
+  },
+  {
+    id: "Q017",
+    domain: "インシデントとイベントへの対応",
+    type: "single",
+    question: "ある企業の開発者は、リモートワークステーションとして Amazon EC2 インスタンスを使用しています。同社は、ユーザーが EC2 セキュリティグループを作成または変更して、無制限の受信アクセスを許可してしまうことを懸念しています。\nDevOps エンジニアは、ユーザーが無制限のセキュリティグループルールを作成したときにそれを検出するソリューションを開発する必要があります。このソリューションは、セキュリティグループルールの変更をほぼリアルタイムで検出し、無制限のルールを削除し、セキュリティチームに電子メールで通知を送信する必要があります。DevOps エンジニアは、入力からセキュリティグループ ID をチェックし、無制限のアクセスを許可するルールを削除し、Amazon Simple Notification Service (Amazon SNS) を介して通知を送信する AWS Lambda 関数を作成しました。\n\n要件を満たすために、DevOps エンジニアは次に何をすべきでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"SNS トピックによって呼び出される Lambda 関数を設定します。SNS トピック用の AWS CloudTrail サブスクリプションを作成します。セキュリティグループの変更イベント用のサブスクリプションフィルタを設定します。" },
+      { id:"B", text:"Amazon EventBridge のスケジュールルールを作成し、Lambda 関数を呼び出します。Lambda 関数を 1 時間ごとに実行するスケジュールパターンを定義します。" },
+      { id:"C", text:"デフォルトのイベントバスをソースとする Amazon EventBridge イベントルールを作成します。ルールのイベントパターンを EC2 セキュリティグループの作成イベントと変更イベントに一致するように定義します。ルールを設定して Lambda 関数を呼び出すようにします。" },
+      { id:"D", text:"すべての AWS サービスからのイベントを購読する Amazon EventBridge カスタムイベントバスを作成します。カスタムイベントバスによって呼び出される Lambda 関数を設定します。" }
+    ],
+    answer: ["C"],
+    explanation: "【正解 C】\nキーワードは「**ほぼリアルタイムで検出**」です。Lambda 関数は既に完成しているので、あとは「セキュリティグループが変更された瞬間にこの関数を呼ぶ」トリガーを用意するだけです。\nEC2 の API 呼び出し（`AuthorizeSecurityGroupIngress`、`CreateSecurityGroup` など）は CloudTrail 経由で **EventBridge のデフォルトイベントバス**に配信されます。そこでデフォルトイベントバスをソースとする**イベントルール**を作り、イベントパターンでセキュリティグループの作成・変更イベントに絞り込み、ターゲットに Lambda 関数を指定すれば、変更発生から数秒で修復と通知が走ります。\n\n【誤りの選択肢】\nA: **「SNS トピック用の CloudTrail サブスクリプション」という仕組みは存在しません。** また「サブスクリプションフィルタ」は CloudWatch Logs の機能名であり、SNS のものではありません。用語が混在した誤った選択肢です。\n\nB: **1 時間ごとのスケジュール実行では「ほぼリアルタイム」になりません。** 最悪の場合、無制限のルールが 1 時間近く開いたままになります。要件の「near real time」を満たしません。\n\nD: **カスタムイベントバスは、自作アプリケーションや SaaS パートナーからのイベントを受け取るためのもの**です。AWS サービス自身のイベント（CloudTrail 由来の API イベント）は**デフォルトイベントバス**に配信されるため、カスタムバスでは受け取れません。また「すべての AWS サービスからのイベントを購読する」という設定自体が存在しません。\n\n【覚えるポイント】\n・**AWS サービスのイベントは「デフォルトイベントバス」に届く**。カスタムイベントバスは自作アプリ／SaaS パートナー用\n・EventBridge のルールは 2 種類\n　- **イベントパターンルール** … 何かが起きた瞬間に反応（ほぼリアルタイム）\n　- **スケジュールルール** … 定期実行（cron / rate）\n・要件に「**near real time / ほぼリアルタイム**」とあればスケジュール実行の選択肢は切る\n・「検出して自動修復」の実装パターン: **EventBridge（イベント検知）→ Lambda / SSM Automation（修復）→ SNS（通知）**\n・より広く既存リソースも含めて統制したい場合は AWS Config（Q004・Q013 参照）、組織全体でセキュリティグループを強制したい場合は Firewall Manager（Q008 参照）",
+    refs: [
+      { label:"EventBridge: イベントバス", url:"https://docs.aws.amazon.com/ja_jp/eventbridge/latest/userguide/eb-event-bus.html" },
+      { label:"EventBridge のイベントパターン", url:"https://docs.aws.amazon.com/ja_jp/eventbridge/latest/userguide/eb-event-patterns.html" }
+    ]
+  },
+  {
+    id: "Q018",
+    domain: "構成管理と IaC",
+    type: "single",
+    question: "DevOps エンジニアが、Web サービスをデプロイするための AWS CloudFormation テンプレートを作成しています。この Web サービスは、Application Load Balancer (ALB) の背後にあるプライベートサブネット内の Amazon EC2 インスタンスで実行されます。DevOps エンジニアは、サービスが IPv6 アドレスを持つクライアントからのリクエストを受け付けられるようにする必要があります。\n\nIPv6 クライアントが Web サービスにアクセスできるようにするには、DevOps エンジニアは CloudFormation テンプレートでどのような設定を行うべきでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"VPC と EC2 インスタンス用のプライベートサブネットに IPv6 CIDR ブロックを追加します。IPv6 ネットワーク用のルーティングテーブルエントリを作成し、IPv6 をサポートする EC2 インスタンスタイプを使用し、各 EC2 インスタンスに IPv6 アドレスを割り当てます。" },
+      { id:"B", text:"各 EC2 インスタンスに IPv6 Elastic IP アドレスを割り当てます。ターゲットグループを作成し、EC2 インスタンスをターゲットとして追加します。ALB のポート 443 にリスナーを作成し、ターゲットグループを ALB に関連付けます。" },
+      { id:"C", text:"ALB をネットワークロードバランサー（NLB）に置き換えます。VPC とサブネットに NLB 用の IPv6 CIDR ブロックを追加し、NLB に IPv6 Elastic IP アドレスを割り当てます。" },
+      { id:"D", text:"VPC と ALB 用のサブネットに IPv6 CIDR ブロックを追加します。ポート 443 でリスナーを作成し、ALB でデュアルスタック IP アドレスタイプを指定します。ターゲットグループを作成し、EC2 インスタンスをターゲットとして追加します。ターゲットグループを ALB に関連付けます。" }
+    ],
+    answer: ["D"],
+    explanation: "【正解 D】\n重要なのは「**IPv6 対応が必要なのはクライアントと接する ALB だけ**」という点です。ALB を**デュアルスタック（dualstack）**の IP アドレスタイプにすると、ALB が IPv6 と IPv4 の両方でリクエストを受け付けられるようになります。\nそして **ALB からバックエンドのターゲットへの通信は IPv4 のまま**で問題ありません。ALB がプロトコル変換を行ってくれるため、プライベートサブネット内の EC2 インスタンスや、その VPC 内部の構成に手を入れる必要がありません。\n必要な作業は次の 3 点です。\n・VPC と **ALB を配置するサブネット**に IPv6 CIDR ブロックを追加する\n・ALB の IP アドレスタイプを **dualstack** に設定し、リスナー（ポート 443）を作成する\n・ターゲットグループに EC2 インスタンスを登録し、ALB に関連付ける\n\n【誤りの選択肢】\nA: **EC2 インスタンス側を IPv6 対応にしても、クライアントが接続する ALB が IPv6 を受け付けなければ意味がありません。** インスタンスはプライベートサブネットにあり、クライアントと直接通信しません。対策する場所を間違えています。\n\nB: **「IPv6 Elastic IP アドレス」というものは存在しません。** Elastic IP は IPv4 のためのサービスです。また、インスタンスへの IP 割り当てはこの要件と無関係です。\n\nC: **NLB に置き換える必要はありません。** ALB も dualstack をサポートしています。さらに「NLB に IPv6 Elastic IP を割り当てる」という記述も、B と同じく存在しない機能です。\n\n【覚えるポイント】\n・**ALB / NLB の IP アドレスタイプ**: `ipv4` / `dualstack`（IPv4 + IPv6）。**IPv6 対応はロードバランサー側で完結できる**\n・**Elastic IP は IPv4 専用**。「IPv6 Elastic IP」は架空の用語 → 選択肢に出たら即座に切る\n・ALB はプロトコル変換するため、**フロント側が IPv6 でもバックエンドは IPv4 のままでよい**\n・IPv6 を使うには VPC とサブネットに **IPv6 CIDR ブロック**の割り当てが必要（ただし本問で必要なのは ALB のサブネット）\n・「対策すべき場所はどこか」を意識する。クライアントと接する境界がどこかを見極めるのがコツ",
+    refs: [
+      { label:"Application Load Balancer の IP アドレスタイプ", url:"https://docs.aws.amazon.com/ja_jp/elasticloadbalancing/latest/application/load-balancer-ip-address-type.html" },
+      { label:"VPC での IPv6 の使用", url:"https://docs.aws.amazon.com/ja_jp/vpc/latest/userguide/vpc-migrate-ipv6.html" }
+    ]
+  }
+];
+/* ===================== 問題データ ここまで ===================== */
+
+/* ---------------- ストレージ ---------------- */
+const SKEY = "dop-quiz-v1";
+const DEFAULT_DB = { version:1, stats:{}, settings:{ showEn:false } };
+let DB = load();
+
+function load(){
+  try{
+    const raw = localStorage.getItem(SKEY);
+    if(!raw) return structuredClone(DEFAULT_DB);
+    const d = JSON.parse(raw);
+    return Object.assign(structuredClone(DEFAULT_DB), d);
+  }catch(e){ return structuredClone(DEFAULT_DB); }
+}
+function save(){ try{ localStorage.setItem(SKEY, JSON.stringify(DB)); }catch(e){} }
+function st(qid){
+  if(!DB.stats[qid]) DB.stats[qid] = { log:[], mark:0 };   // mark: 0=なし 1=★重要 2=要復習
+  return DB.stats[qid];
+}
+function rec(qid, ok){ st(qid).log.push({ t:Date.now(), ok:!!ok }); save(); }
+function summary(qid){
+  const s = st(qid), log = s.log;
+  const n = log.length, c = log.filter(x=>x.ok).length;
+  let streak = 0;
+  for(let i=log.length-1;i>=0;i--){ if(log[i].ok) streak++; else break; }
+  return { n, c, wrong:n-c, rate: n? Math.round(c/n*100) : null, last: n? log[n-1].ok : null, streak, mark:s.mark };
+}
+const MARK_LABEL = { 1:"★ 重要", 2:"要復習" };
+
+/* ---------------- ユーティリティ ---------------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"]/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[m]));
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const eqSet = (a,b) => a.length===b.length && a.every(x=>b.includes(x));
+const eqSeq = (a,b) => a.length===b.length && a.every((x,i)=>x===b[i]);
+const domains = () => [...new Set(QUESTIONS.map(q=>q.domain).filter(Boolean))];
+const TYPE_LABEL = { single:"単一選択", multi:"複数選択", order:"並び替え" };
+
+/* ---------------- 出題プール ---------------- */
+let session = { pool:[], idx:0, sel:[], revealed:false, order:[], correctCount:0, doneCount:0 };
+let filter = { domain:"", mode:"all", shuffleQ:false, shuffleC:false };
+
+function buildPool(){
+  let list = QUESTIONS.filter(q=>!filter.domain || q.domain===filter.domain);
+  const m = filter.mode;
+  if(m==="unanswered") list = list.filter(q=>summary(q.id).n===0);
+  if(m==="wrong")      list = list.filter(q=>summary(q.id).wrong>0);
+  if(m==="lastwrong")  list = list.filter(q=>summary(q.id).last===false);
+  if(m==="mark1")      list = list.filter(q=>summary(q.id).mark===1);
+  if(m==="mark2")      list = list.filter(q=>summary(q.id).mark===2);
+  if(m==="weak")       list = list.filter(q=>{const s=summary(q.id); return s.n>0 && s.rate<70;});
+  return filter.shuffleQ ? shuffle(list) : list;
+}
+function startSession(){
+  session = { pool:buildPool(), idx:0, sel:[], revealed:false, order:[], correctCount:0, doneCount:0 };
+  renderQuiz();
+}
+function gotoQuestion(qid){
+  const i = session.pool.findIndex(q=>q.id===qid);
+  if(i>=0){
+    session.idx = i;
+  } else {
+    // 現在の出題プールに含まれない問題は、全問題プールに切り替えてジャンプ
+    session.pool = QUESTIONS.slice();
+    session.idx = Math.max(0, session.pool.findIndex(q=>q.id===qid));
+  }
+  session.sel=[]; session.order=[]; session.revealed=false;
+  switchView("quiz"); renderQuiz();
+}
+/* 「3」「Q003」「q3」などの入力を問題へ解決してジャンプ */
+function jumpTo(raw){
+  const s = String(raw||"").trim();
+  if(!s) return;
+  const up = s.toUpperCase();
+  // 1) ID 完全一致
+  let q = QUESTIONS.find(x=>x.id.toUpperCase()===up);
+  // 2) 数字だけ → ID 内の数字が一致するもの（Q003 ⇔ 3）
+  if(!q){
+    const n = parseInt(s.replace(/[^0-9]/g,""),10);
+    if(!isNaN(n)){
+      q = QUESTIONS.find(x=>{
+        const m = x.id.match(/(\d+)/);
+        return m && parseInt(m[1],10)===n;
+      });
+      // 3) それでも無ければ、現在の出題順の n 番目
+      if(!q && n>=1 && n<=session.pool.length) q = session.pool[n-1];
+    }
+  }
+  if(!q){ alert(`「${s}」に一致する問題が見つかりません。\n問題番号（例: 3）または ID（例: Q003）を入力してください。`); return; }
+  gotoQuestion(q.id);
+}
+
+/* ---------------- 演習ビュー ---------------- */
+function renderQuiz(){
+  const el = $("#view-quiz");
+  const ctrl = quizControls();
+
+  if(!session.pool.length){
+    el.innerHTML = ctrl + `<div class="card"><div class="empty">条件に合う問題がありません。<br>絞り込みを変えて「開始 / リセット」を押してください。</div></div>`;
+    bindControls(); return;
+  }
+  if(session.idx >= session.pool.length){
+    const rate = session.doneCount? Math.round(session.correctCount/session.doneCount*100):0;
+    el.innerHTML = ctrl + `<div class="card"><h2>セッション終了</h2>
+      <div class="grid">
+        <div class="stat"><div class="n">${session.doneCount}</div><div class="l">回答数</div></div>
+        <div class="stat"><div class="n" style="color:var(--ok)">${session.correctCount}</div><div class="l">正解</div></div>
+        <div class="stat"><div class="n" style="color:var(--ng)">${session.doneCount-session.correctCount}</div><div class="l">不正解</div></div>
+        <div class="stat"><div class="n">${rate}%</div><div class="l">正答率</div></div>
+      </div>
+      <div class="foot"><button class="btn" id="again">もう一周</button>
+      <button class="btn sub" id="againWrong">間違えた問題だけ</button></div></div>`;
+    bindControls();
+    $("#again").onclick = startSession;
+    $("#againWrong").onclick = ()=>{ filter.mode="lastwrong"; $("#f-mode").value="lastwrong"; startSession(); };
+    return;
+  }
+
+  const q = session.pool[session.idx];
+  const s = summary(q.id);
+  const R = session.revealed;
+  const need = q.type==="multi" ? (q.pick || q.answer.length) : 1;
+
+  const hist = s.n ? `<span class="tag ${s.last?'ok':'ng'}">直近 ${s.last?'○':'×'}</span>
+      <span class="tag">${s.c}/${s.n}　${s.rate}%</span>${s.streak>1?`<span class="tag ok">${s.streak}連続正解</span>`:""}`
+    : `<span class="tag">未回答</span>`;
+
+  let hint = "";
+  if(q.type==="multi") hint = `${need} つ選択してください`;
+  else if(q.type==="order") hint = "正しい順序になるようにクリックして番号を付けてください";
+  else hint = "1 つ選択してください";
+
+  let choicesHtml = "";
+  const chs = filter.shuffleC && q.type!=="order" ? shuffle(q.choices) : q.choices;
+  if(q.type==="order"){
+    chs.forEach(c=>{
+      const pos = session.order.indexOf(c.id);
+      let cls = "ch" + (pos>=0 ? " sel":"");
+      let key = pos>=0 ? (pos+1) : "・";
+      if(R){
+        const correctPos = q.answer.indexOf(c.id);
+        cls = "ch " + (pos===correctPos ? "rev-ok":"rev-ng");
+        key = (correctPos+1);
+      }
+      choicesHtml += `<div class="${cls}" data-id="${c.id}"><div class="key">${key}</div>
+        <div class="txt">${esc(c.text)}</div>${R && pos>=0 && pos!==q.answer.indexOf(c.id)?`<div class="mark">あなた: ${pos+1}</div>`:""}</div>`;
+    });
+  } else {
+    chs.forEach(c=>{
+      const sel = session.sel.includes(c.id);
+      const isAns = q.answer.includes(c.id);
+      let cls = "ch" + (sel?" sel":"");
+      let mark = "";
+      if(R){
+        if(isAns && sel){ cls="ch rev-ok"; mark="正解"; }
+        else if(isAns && !sel){ cls="ch rev-miss"; mark="正解（未選択）"; }
+        else if(!isAns && sel){ cls="ch rev-ng"; mark="あなたの選択"; }
+        else cls="ch";
+      }
+      choicesHtml += `<div class="${cls}" data-id="${c.id}"><div class="key">${c.id}</div>
+        <div class="txt">${esc(c.text)}</div>${mark?`<div class="mark">${mark}</div>`:""}</div>`;
+    });
+  }
+
+  let verdict = "";
+  if(R){
+    const ok = isCorrect(q);
+    const ansStr = q.type==="order" ? q.answer.join(" → ") : q.answer.join(", ");
+    verdict = `<div class="verdict ${ok?'ok':'ng'}">
+      <div class="vhead">${ok?"○ 正解":"× 不正解"}　<span style="font-size:13px;font-weight:500;color:var(--muted)">正解: ${ansStr}</span></div>
+      ${q.explanation?`<div class="exp">${esc(q.explanation)}</div>`:""}
+      ${(q.refs&&q.refs.length)?`<div class="refs">参考: ${q.refs.map(r=>`<a href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label||r.url)}</a>`).join(" / ")}</div>`:""}
+    </div>`;
+  }
+
+  const markBtns = `
+    <button class="btn sm ${s.mark===1?'':'sub'}" data-mark="1" style="${s.mark===1?'background:var(--warn);border-color:transparent;color:#fff':''}">★ 重要</button>
+    <button class="btn sm ${s.mark===2?'':'sub'}" data-mark="2" style="${s.mark===2?'background:var(--ng);border-color:transparent;color:#fff':''}">要復習</button>`;
+
+  el.innerHTML = ctrl + `<div class="card">
+    <div class="qmeta">
+      <span class="pager">
+        <button class="pg" id="navPrev" ${session.idx===0?"disabled":""} title="前の問題 (←)">‹</button>
+        <span class="pill" style="min-width:52px;text-align:center">${session.idx+1} / ${session.pool.length}</span>
+        <button class="pg" id="navNext" ${session.idx+1>=session.pool.length?"disabled":""} title="次の問題 (→)">›</button>
+      </span>
+      ${q.domain?`<span class="tag dom">${esc(q.domain)}</span>`:""}
+      <span class="tag">${TYPE_LABEL[q.type]||q.type}</span>
+      ${s.mark?`<span class="tag mk">${MARK_LABEL[s.mark]}</span>`:""}
+      ${hist}
+      <span class="pill" style="margin-left:auto">${esc(q.id)}</span>
+    </div>
+    <div class="qtext">${esc(q.question)}</div>
+    ${(q.questionEn && DB.settings.showEn)?`<div class="qen">${esc(q.questionEn)}</div>`:""}
+    <div class="hint">${hint}${q.type==="order"&&session.order.length?` <button class="btn sm sub" id="clearOrder">順序をクリア</button>`:""}</div>
+    <div class="choices" id="choices">${choicesHtml}</div>
+    ${verdict}
+    <div class="foot">
+      ${markBtns}
+      ${q.questionEn?`<button class="btn sm sub" id="toggleEn">${DB.settings.showEn?"英文を隠す":"英文を表示"}</button>`:""}
+      <div class="spacer"></div>
+      ${!R?`<button class="btn" id="submit" ${canSubmit(q)?"":"disabled"}>回答する</button>`
+           :`<button class="btn" id="next">${session.idx+1>=session.pool.length?"結果を見る":"次の問題 →"}</button>`}
+    </div>
+  </div>
+  <div class="pagerbar">
+    <button class="btn sub" id="navPrevB" ${session.idx===0?"disabled":""}>← 前の問題</button>
+    <span class="pill">${session.idx+1} / ${session.pool.length}　（${esc(q.id)}）</span>
+    <button class="btn sub" id="navNextB" ${session.idx+1>=session.pool.length?"disabled":""}>次の問題 →</button>
+  </div>`;
+
+  bindControls();
+  $("#choices").querySelectorAll(".ch").forEach(d=>{
+    if(R) return;
+    d.onclick = ()=> pick(q, d.dataset.id);
+  });
+  el.querySelectorAll("[data-mark]").forEach(b=>{
+    b.onclick = ()=>{ const v=+b.dataset.mark; const o=st(q.id); o.mark = o.mark===v?0:v; save(); renderQuiz(); };
+  });
+  if($("#toggleEn")) $("#toggleEn").onclick = ()=>{ DB.settings.showEn=!DB.settings.showEn; save(); renderQuiz(); };
+  if($("#clearOrder")) $("#clearOrder").onclick = ()=>{ session.order=[]; renderQuiz(); };
+  if($("#submit")) $("#submit").onclick = ()=> doSubmit(q);
+  if($("#next")) $("#next").onclick = ()=> nextQ();
+  if($("#skip")) $("#skip").onclick = ()=> nextQ();
+  if($("#prev")) $("#prev").onclick = ()=> prevQ();
+  if($("#navPrev")) $("#navPrev").onclick = ()=> prevQ();
+  if($("#navNext")) $("#navNext").onclick = ()=> nextQ();
+  if($("#navPrevB")) $("#navPrevB").onclick = ()=> prevQ();
+  if($("#navNextB")) $("#navNextB").onclick = ()=> nextQ();
+}
+
+function pick(q, id){
+  if(q.type==="single"){ session.sel=[id]; }
+  else if(q.type==="multi"){
+    const need = q.pick || q.answer.length;
+    const i = session.sel.indexOf(id);
+    if(i>=0) session.sel.splice(i,1);
+    else { if(session.sel.length>=need) session.sel.shift(); session.sel.push(id); }
+  } else {
+    const i = session.order.indexOf(id);
+    if(i>=0) session.order.splice(i,1); else session.order.push(id);
+  }
+  renderQuiz();
+}
+function canSubmit(q){
+  if(q.type==="order") return session.order.length===q.choices.length;
+  if(q.type==="multi") return session.sel.length===(q.pick||q.answer.length);
+  return session.sel.length===1;
+}
+function isCorrect(q){
+  if(q.type==="order") return eqSeq(session.order, q.answer);
+  return eqSet(session.sel, q.answer);
+}
+function doSubmit(q){
+  if(!canSubmit(q)) return;
+  const ok = isCorrect(q);
+  rec(q.id, ok);
+  session.revealed = true;
+  session.doneCount++; if(ok) session.correctCount++;
+  renderQuiz();
+}
+function nextQ(){
+  session.idx++; session.sel=[]; session.order=[]; session.revealed=false;
+  renderQuiz();
+}
+function prevQ(){
+  if(session.idx<=0) return;
+  session.idx--; session.sel=[]; session.order=[]; session.revealed=false;
+  renderQuiz();
+}
+
+function quizControls(){
+  const doms = domains();
+  const counts = { all:QUESTIONS.length };
+  return `<div class="card">
+    <div class="row">
+      <label class="f">出題範囲
+        <select id="f-mode">
+          <option value="all">すべて (${QUESTIONS.length})</option>
+          <option value="unanswered">未回答 (${QUESTIONS.filter(q=>summary(q.id).n===0).length})</option>
+          <option value="wrong">一度でも間違えた (${QUESTIONS.filter(q=>summary(q.id).wrong>0).length})</option>
+          <option value="lastwrong">直近が× (${QUESTIONS.filter(q=>summary(q.id).last===false).length})</option>
+          <option value="weak">正答率70%未満 (${QUESTIONS.filter(q=>{const s=summary(q.id);return s.n>0&&s.rate<70;}).length})</option>
+          <option value="mark1">★重要 (${QUESTIONS.filter(q=>summary(q.id).mark===1).length})</option>
+          <option value="mark2">要復習 (${QUESTIONS.filter(q=>summary(q.id).mark===2).length})</option>
+        </select>
+      </label>
+      <label class="f">ドメイン
+        <select id="f-dom"><option value="">すべて</option>${doms.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join("")}</select>
+      </label>
+      <label class="f">&nbsp;
+        <span class="row">
+          <label style="font-size:13px;display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="f-sq"> 問題順シャッフル</label>
+          <label style="font-size:13px;display:flex;gap:5px;align-items:center;cursor:pointer"><input type="checkbox" id="f-sc"> 選択肢シャッフル</label>
+        </span>
+      </label>
+      <label class="f">問題番号へジャンプ
+        <span class="row">
+          <input type="text" id="f-jump" placeholder="3 / Q003" style="width:100px">
+          <button class="btn sm sub" id="jumpBtn">移動</button>
+        </span>
+      </label>
+      <div class="spacer"></div>
+      <label class="f">&nbsp;<button class="btn" id="start">開始 / リセット</button></label>
+    </div>
+  </div>`;
+}
+function bindControls(){
+  const m=$("#f-mode"), d=$("#f-dom"), sq=$("#f-sq"), sc=$("#f-sc"), b=$("#start");
+  if(!m) return;
+  m.value=filter.mode; d.value=filter.domain; sq.checked=filter.shuffleQ; sc.checked=filter.shuffleC;
+  m.onchange=()=>{filter.mode=m.value;}; d.onchange=()=>{filter.domain=d.value;};
+  sq.onchange=()=>{filter.shuffleQ=sq.checked;}; sc.onchange=()=>{filter.shuffleC=sc.checked;};
+  b.onclick=startSession;
+  const j=$("#f-jump"), jb=$("#jumpBtn");
+  if(j){
+    jb.onclick = ()=> jumpTo(j.value);
+    j.onkeydown = e=>{ if(e.key==="Enter"){ e.preventDefault(); e.stopPropagation(); jumpTo(j.value); } };
+  }
+}
+
+/* ---------------- 問題一覧 ---------------- */
+function renderList(){
+  const rows = QUESTIONS.map(q=>{
+    const s = summary(q.id);
+    const rate = s.rate===null? "—" : s.rate+"%";
+    const last = s.n? (s.last?'<span style="color:var(--ok)">○</span>':'<span style="color:var(--ng)">×</span>') : "—";
+    return `<tr class="clickable" data-id="${esc(q.id)}">
+      <td style="white-space:nowrap">${esc(q.id)}</td>
+      <td class="qcell"><div class="trunc">${esc(q.question)}</div></td>
+      <td style="white-space:nowrap">${esc(q.domain||"—")}</td>
+      <td style="white-space:nowrap">${TYPE_LABEL[q.type]||q.type}</td>
+      <td style="text-align:center">${last}</td>
+      <td style="white-space:nowrap">${s.c}/${s.n}　${rate}</td>
+      <td style="white-space:nowrap">${s.mark?MARK_LABEL[s.mark]:"—"}</td>
+    </tr>`;
+  }).join("");
+  $("#view-list").innerHTML = `<div class="card">
+    <h2>問題一覧（${QUESTIONS.length}問）</h2>
+    <div class="note">行をクリックするとその問題を演習できます。</div>
+    <div style="overflow-x:auto;margin-top:10px">
+    <table><thead><tr><th>ID</th><th>問題</th><th>ドメイン</th><th>形式</th><th>直近</th><th>正解/回答</th><th>マーク</th></tr></thead>
+    <tbody>${rows||`<tr><td colspan="7" class="empty">問題がありません</td></tr>`}</tbody></table></div></div>`;
+  $("#view-list").querySelectorAll("tr.clickable").forEach(tr=>tr.onclick=()=>gotoQuestion(tr.dataset.id));
+}
+
+/* ---------------- 統計 ---------------- */
+function renderStats(){
+  let n=0,c=0,answered=0;
+  QUESTIONS.forEach(q=>{ const s=summary(q.id); n+=s.n; c+=s.c; if(s.n) answered++; });
+  const rate = n? Math.round(c/n*100):0;
+
+  const byDom = domains().map(d=>{
+    const qs = QUESTIONS.filter(q=>q.domain===d);
+    let dn=0,dc=0; qs.forEach(q=>{const s=summary(q.id); dn+=s.n; dc+=s.c;});
+    return { d, qs:qs.length, n:dn, c:dc, rate: dn? Math.round(dc/dn*100):null };
+  });
+
+  const weak = QUESTIONS.map(q=>({q,s:summary(q.id)}))
+    .filter(x=>x.s.n>0 && x.s.rate<100)
+    .sort((a,b)=> a.s.rate-b.s.rate || b.s.wrong-a.s.wrong).slice(0,20);
+
+  const cls = r => r>=80?"high": r>=60?"mid":"low";
+
+  $("#view-stats").innerHTML = `
+  <div class="card"><h2>全体</h2>
+    <div class="grid">
+      <div class="stat"><div class="n">${QUESTIONS.length}</div><div class="l">総問題数</div></div>
+      <div class="stat"><div class="n">${answered}</div><div class="l">回答済み問題</div></div>
+      <div class="stat"><div class="n">${n}</div><div class="l">のべ回答数</div></div>
+      <div class="stat"><div class="n" style="color:var(--${rate>=80?'ok':rate>=60?'warn':'ng'})">${rate}%</div><div class="l">通算正答率</div></div>
+    </div>
+  </div>
+  <div class="card"><h2>ドメイン別</h2>
+    ${byDom.length? byDom.map(x=>`<div class="dom-row">
+      <div class="t"><span>${esc(x.d)} <span style="color:var(--muted)">(${x.qs}問)</span></span>
+      <span style="color:var(--muted)">${x.rate===null?"未回答":x.c+"/"+x.n+"　"+x.rate+"%"}</span></div>
+      <div class="bar"><i class="${x.rate===null?'':cls(x.rate)}" style="width:${x.rate||0}%"></i></div>
+    </div>`).join("") : `<div class="empty">データがありません</div>`}
+  </div>
+  <div class="card"><h2>弱点の問題（正答率が低い順・上位20）</h2>
+    ${weak.length? `<div style="overflow-x:auto"><table>
+      <thead><tr><th>ID</th><th>問題</th><th>正解/回答</th><th>正答率</th><th>直近</th><th>マーク</th></tr></thead>
+      <tbody>${weak.map(x=>`<tr class="clickable" data-id="${esc(x.q.id)}">
+        <td style="white-space:nowrap">${esc(x.q.id)}</td>
+        <td class="qcell"><div class="trunc">${esc(x.q.question)}</div></td>
+        <td style="white-space:nowrap">${x.s.c}/${x.s.n}</td>
+        <td style="color:var(--${cls(x.s.rate)==='high'?'ok':cls(x.s.rate)==='mid'?'warn':'ng'})">${x.s.rate}%</td>
+        <td>${x.s.last?'○':'×'}</td>
+        <td>${x.s.mark?MARK_LABEL[x.s.mark]:"—"}</td></tr>`).join("")}</tbody></table></div>`
+      : `<div class="empty">まだ弱点データがありません</div>`}
+  </div>`;
+  $("#view-stats").querySelectorAll("tr.clickable").forEach(tr=>tr.onclick=()=>gotoQuestion(tr.dataset.id));
+}
+
+/* ---------------- データ ---------------- */
+function renderData(){
+  $("#view-data").innerHTML = `<div class="card">
+    <h2>学習履歴のバックアップ</h2>
+    <div class="note">履歴・マークはこのブラウザの localStorage に保存されます。ブラウザのデータを消すと失われるため、時々エクスポートしておくと安全です。</div>
+    <div class="foot"><button class="btn" id="exp">エクスポート (JSON)</button>
+      <button class="btn sub" id="imp">インポート</button>
+      <input type="file" id="impf" accept="application/json,.json" hidden>
+      <div class="spacer"></div>
+      <button class="btn sub" id="reset" style="color:var(--ng)">履歴をすべて削除</button></div>
+  </div>
+  <div class="card"><h2>問題の追加方法</h2>
+    <div class="note">このファイルをテキストエディタで開き、<code>const QUESTIONS = [ ... ]</code> の中に問題オブジェクトを追加してください。<br>
+    <code>type</code> は <code>"single"</code>（単一選択）、<code>"multi"</code>（複数選択・<code>pick</code>で選ぶ数を指定）、<code>"order"</code>（並び替え・<code>answer</code>が正しい順序）です。<br>
+    <code>id</code> をそのままにしておけば、問題文を修正しても学習履歴は引き継がれます。</div>
+  </div>`;
+  $("#exp").onclick = ()=>{
+    const blob = new Blob([JSON.stringify(DB,null,2)],{type:"application/json"});
+    const a=document.createElement("a");
+    const d=new Date(), p=x=>String(x).padStart(2,"0");
+    a.href=URL.createObjectURL(blob);
+    a.download=`dop-quiz-history-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}.json`;
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  };
+  $("#imp").onclick = ()=> $("#impf").click();
+  $("#impf").onchange = e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const d=JSON.parse(r.result);
+        if(!d || typeof d.stats!=="object") throw 0;
+        DB = Object.assign(structuredClone(DEFAULT_DB), d);
+        save(); alert("インポートしました。"); renderData(); renderList(); renderStats();
+      }catch(err){ alert("読み込めませんでした。エクスポートした JSON ファイルを選んでください。"); }
+    };
+    r.readAsText(f); e.target.value="";
+  };
+  $("#reset").onclick = ()=>{
+    if(confirm("すべての学習履歴とマークを削除します。よろしいですか？")){
+      DB = structuredClone(DEFAULT_DB); save(); renderData(); renderList(); renderStats(); startSession();
+    }
+  };
+}
+
+/* ---------------- ビュー切替 ---------------- */
+function switchView(v){
+  ["quiz","list","stats","data"].forEach(x=>{ $("#view-"+x).hidden = (x!==v); });
+  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on", b.dataset.v===v));
+  if(v==="list") renderList();
+  if(v==="stats") renderStats();
+  if(v==="data") renderData();
+}
+document.querySelectorAll("nav button").forEach(b=> b.onclick=()=>switchView(b.dataset.v));
+
+/* ---------------- キーボード ---------------- */
+document.addEventListener("keydown", e=>{
+  if($("#view-quiz").hidden) return;
+  if(e.target.tagName==="INPUT"||e.target.tagName==="SELECT") return;
+  const q = session.pool[session.idx]; if(!q) return;
+  if(e.key==="Enter"){
+    e.preventDefault();
+    if(session.revealed) nextQ(); else if(canSubmit(q)) doSubmit(q);
+    return;
+  }
+  if(e.key==="ArrowLeft"){ e.preventDefault(); prevQ(); return; }
+  if(e.key==="ArrowRight"){ e.preventDefault(); if(session.idx+1<session.pool.length) nextQ(); return; }
+  if(session.revealed) return;
+  const n = parseInt(e.key,10);
+  if(n>=1 && n<=9 && q.choices[n-1]) pick(q, q.choices[n-1].id);
+  const up = e.key.toUpperCase();
+  if(/^[A-Z]$/.test(up) && q.choices.some(c=>c.id===up)) pick(q, up);
+});
+
+/* ---------------- 起動 ---------------- */
+startSession();
+</script>
+</body>
+</html>
