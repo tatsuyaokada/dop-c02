@@ -494,6 +494,123 @@ const QUESTIONS = [
       { label:"Application Load Balancer の IP アドレスタイプ", url:"https://docs.aws.amazon.com/ja_jp/elasticloadbalancing/latest/application/load-balancer-ip-address-type.html" },
       { label:"VPC での IPv6 の使用", url:"https://docs.aws.amazon.com/ja_jp/vpc/latest/userguide/vpc-migrate-ipv6.html" }
     ]
+  },
+  {
+    id: "Q019",
+    domain: "構成管理と IaC",
+    type: "single",
+    question: "ある企業は、AWS Organizations と AWS Control Tower を使用して、すべての AWS アカウントを管理しています。この企業は、Enterprise Support プランを使用しています。\nDevOps エンジニアは、Account Factory for Terraform（AFT）を使用して新しいアカウントをプロビジョニングしています。新しいアカウントがプロビジョニングされると、DevOps エンジニアは、新しいアカウントのサポートプランが Basic Support プランに設定されていることに気づきました。DevOps エンジニアは、新しいアカウントを Enterprise Support プランでプロビジョニングするためのソリューションを実装する必要があります。\n\nこれらの要件を満たすソリューションはどれですか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"AWS Config の適合性パックを使用して、account-part-of-organizations AWS Config ルールをデプロイし、準拠していないアカウントを自動的に修復します。" },
+      { id:"B", text:"AWS サポートにアカウントをエンタープライズサポートプランに追加するためのチケットを作成する AWS Lambda 関数を作成します。Lambda 関数に support:ResolveCase 権限を付与します。" },
+      { id:"C", text:"control_tower_parameters 入力に値を追加して、AWSEnterpriseSupport パラメーターを組織の管理アカウント番号に設定します。" },
+      { id:"D", text:"AFT デプロイメント入力構成で、aft_feature_enterprise_support 機能フラグを True に設定します。AFT を再デプロイし、変更を適用します。" }
+    ],
+    answer: ["D"],
+    explanation: "【正解 D】\n**Account Factory for Terraform（AFT）には「機能フラグ（feature flags）」**という仕組みがあり、AFT のデプロイメント入力構成で有効・無効を切り替えられます。その 1 つが **`aft_feature_enterprise_support`** で、これを `true` にすると、AFT が新しくプロビジョニングしたアカウントを自動的に **Enterprise Support プランに登録**します。\n既定値は `false` のため、何も設定しないと新規アカウントは Basic Support のままになります。これがまさに本問の症状です。フラグを変更したら AFT を再デプロイして反映させます。\n\n参考までに、AFT の主な機能フラグは次の 3 つです。\n・`aft_feature_cloudtrail_data_events` … CloudTrail のデータイベントを有効化\n・`aft_feature_enterprise_support` … 新規アカウントを Enterprise Support に登録\n・`aft_feature_delete_default_vpcs_enabled` … デフォルト VPC を削除\n\n【誤りの選択肢】\nA: **`account-part-of-organizations` は「アカウントが AWS Organizations に属しているか」を確認するルール**で、サポートプランとは無関係です。そもそも AWS Config でサポートプランを変更することはできません。\n\nB: **`support:ResolveCase` は「サポートケースを解決（クローズ）する」権限**であり、ケースを作成する権限ではありません（作成は `support:CreateCase`）。権限の選択が誤っています。加えて、AFT に標準機能がある以上、Lambda を自作するのは不要な実装です。\n\nC: **`AWSEnterpriseSupport` というパラメーターは存在しません。** `control_tower_parameters` は Control Tower 関連の設定を渡すための入力ですが、この名前の項目は架空です。\n\n【覚えるポイント】\n・**AFT の機能フラグ 3 種**（cloudtrail_data_events / enterprise_support / delete_default_vpcs_enabled）は名前ごと覚えておくと即答できる\n・新規アカウントの Enterprise Support 自動登録 = **`aft_feature_enterprise_support = true`**\n・IAM のサポート系アクション: **`support:CreateCase`（作成）** と **`support:ResolveCase`（解決）** は別物\n・「サービスに標準機能があるのに自前で Lambda を作る」選択肢は、たいてい誤答（Q003・Q004 と同じ判断軸）",
+    refs: [
+      { label:"AFT: 機能オプション（feature flags）の有効化", url:"https://docs.aws.amazon.com/ja_jp/controltower/latest/userguide/aft-feature-options.html" },
+      { label:"Account Factory for Terraform の概要", url:"https://docs.aws.amazon.com/ja_jp/controltower/latest/userguide/aft-overview.html" }
+    ]
+  },
+  {
+    id: "Q020",
+    domain: "インシデントとイベントへの対応",
+    type: "single",
+    question: "ある企業の DevOps エンジニアは、メンテナンス期間中に AWS Systems Manager を使用してメンテナンス作業を実行します。この企業には、AWS Health からの通知後に再起動が必要な Amazon EC2 インスタンスがいくつかあります。DevOps エンジニアは、これらの通知を修復するための自動化ソリューションを実装する必要があります。DevOps エンジニアは Amazon EventBridge ルールを作成します。\n\nこれらの要件を満たすために、DevOps エンジニアは EventBridge ルールをどのように構成すべきでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"EC2 のサービスである AWS Health のイベントソースと、インスタンスのメンテナンスを示すイベントタイプを設定します。Systems Manager ドキュメントをターゲットとして、EC2 インスタンスを再起動します。" },
+      { id:"B", text:"Systems Manager のイベントソースと、メンテナンス期間を示すイベントタイプを設定します。EC2 インスタンスを再起動する Systems Manager ドキュメントをターゲットに設定します。" },
+      { id:"C", text:"AWS Health のイベントソース、EC2 のサービス、およびインスタンスのメンテナンスを示すイベントタイプを設定します。新しく作成した AWS Lambda 関数をターゲットとして、メンテナンス期間中に EC2 インスタンスを再起動する自動化タスクを登録します。" },
+      { id:"D", text:"EC2 のイベントソースと、インスタンスのメンテナンスを示すイベントタイプを設定します。新しく作成した AWS Lambda 関数をターゲットとして、メンテナンス期間中に EC2 インスタンスを再起動する自動化タスクを登録します。" }
+    ],
+    answer: ["C"],
+    explanation: "【正解 C】\n本問には要件が 2 つあります。\n① **AWS Health の通知（EC2 インスタンスのメンテナンス予定）を検知する**\n② **再起動は「メンテナンス期間中」に実行する**\n\nEventBridge のルールは、イベントソースに **`aws.health`**、サービスに **EC2**、イベントタイプに **インスタンスのメンテナンス（AWS_EC2_INSTANCE_...）**を指定することで、AWS Health のイベントを捕捉できます。\nそして重要なのが②です。**Health イベントが届いた瞬間に再起動してしまってはいけません。** そこで Lambda 関数をターゲットにして、**Systems Manager のメンテナンスウィンドウに再起動の自動化タスクを「登録」**します。実際の再起動はメンテナンスウィンドウが来たときに実行されるため、業務時間中の予期しない再起動を避けられます。\n\n【誤りの選択肢】\nA: イベントソースの指定は正しいのですが、**ターゲットに Systems Manager ドキュメントを直接指定しているため、イベント受信と同時に再起動が走ってしまいます。** 「メンテナンス期間中に実行する」という要件を満たしません。\n\nB: **イベントソースが誤りです。** メンテナンスが必要であることを通知するのは AWS Health であり、Systems Manager ではありません。Systems Manager のメンテナンスウィンドウ開始を起点にしても、どのインスタンスを再起動すべきかという情報が得られません。\n\nD: **イベントソースが `aws.ec2` になっている点が誤りです。** インスタンスの計画メンテナンス通知は **AWS Health（`aws.health`）**から配信されます。EC2 のイベントソースは状態変化（running / stopped など）を通知するもので、メンテナンス予定の通知ではありません。\n\n【覚えるポイント】\n・**AWS のサービス側の計画メンテナンス・障害・EOL 通知 → AWS Health（イベントソース `aws.health`）**。EC2 のイベントソースは状態変化用\n・**「メンテナンス期間中に実行」= Systems Manager メンテナンスウィンドウにタスクを登録**。即時実行のターゲット指定とは区別する\n・EventBridge のターゲットに直接 SSM ドキュメント／Automation を指定すると **即時実行**になる\n・切り分けの型: 「**何をきっかけに（イベントソース）**」と「**いつ実行するか（即時 or ウィンドウ内）**」の 2 軸で選択肢を絞る\n\n【要注意：A を選ぶ人が多い問題】\nA と C は**イベントソースの指定が全く同じ**で、違うのはターゲットだけです。しかも A の方が構成がシンプルなので、「運用オーバーヘッドが小さい方」と考えて A を選ぶ人が非常に多くなります。\n\nA を支持したくなる理由（いずれも正しい認識）:\n・EventBridge のターゲットには SSM Run Command / SSM Automation を**直接指定できる**ので、A は技術的に実現可能\n・Lambda を挟まない分シンプルで、DOP で頻出の「運用オーバーヘッド最小」という評価軸なら有利\n\nそれでも C が正解になる決め手は、**問題文の 1 文目**です。\n「ある企業の DevOps エンジニアは、**メンテナンス期間中に** AWS Systems Manager を使用してメンテナンス作業を実行します」\nDOP の問題文で、解法に関係のない前提が 1 文目に置かれることはまずありません。この一文は「**再起動はメンテナンスウィンドウ内で行う**」という制約を与えるために存在しています。\n・A … Health 通知を受けた**その瞬間に再起動**が走る（業務時間中に落ちる可能性がある）\n・C … Lambda が**メンテナンスウィンドウにタスクを登録**し、実行はウィンドウ到来後\nつまり A は「間違い」ではなく「**要件を 1 つ満たしていない**」タイプの誤答です。\n\n見分け方のコツ: **選択肢間でイベントソースが同じでターゲットだけが違う**なら、出題者はターゲット側で差をつけています。そのときは問題文に**タイミングや順序の制約**が書かれていないかを探すと、根拠が見つかります。",
+    refs: [
+      { label:"AWS Health イベントの EventBridge による監視", url:"https://docs.aws.amazon.com/ja_jp/health/latest/ug/cloudwatch-events-health.html" },
+      { label:"Systems Manager メンテナンスウィンドウ", url:"https://docs.aws.amazon.com/ja_jp/systems-manager/latest/userguide/systems-manager-maintenance.html" },
+      { label:"EventBridge のターゲット（Run Command / Automation も指定可能）", url:"https://docs.aws.amazon.com/ja_jp/eventbridge/latest/userguide/eb-targets.html" }
+    ]
+  },
+  {
+    id: "Q021",
+    domain: "SDLC の自動化",
+    type: "single",
+    question: "ある企業は、社内の品質管理アプリケーションをすべてコンテナ化しました。同社は Amazon EC2 インスタンス上で Jenkins を実行しており、パッチ適用とアップグレードが必要です。コンプライアンス担当者は、ビルド成果物に企業の知的財産が含まれているため、DevOps エンジニアにビルド成果物の暗号化を開始するよう依頼しました。\n\nDevOps エンジニアは、これを最も保守しやすい方法で実現するために、どのような手順を踏むべきでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"AWS Systems Manager を使用して EC2 インスタンスのパッチ適用とアップグレードを自動化し、Amazon EBS ボリュームをデフォルトで暗号化します。" },
+      { id:"B", text:"Jenkins を Amazon ECS クラスターにデプロイし、ビルド成果物をデフォルトの暗号化が有効になっている Amazon S3 バケットにコピーします。" },
+      { id:"C", text:"AWS CodePipeline のビルドアクションを活用し、AWS Secrets Manager を使用して成果物を暗号化します。" },
+      { id:"D", text:"EC2 インスタンス上で実行されている Jenkins インスタンスを、成果物暗号化機能を備えた AWS CodeBuild に置き換える。" }
+    ],
+    answer: ["D"],
+    explanation: "【正解 D】\n本問には課題が 2 つあります。\n① **Jenkins on EC2 のパッチ適用・アップグレードという運用負荷**\n② **ビルド成果物の暗号化**\n\n**AWS CodeBuild は完全マネージド型のビルドサービス**で、ビルド環境の OS・ランタイム・パッチは AWS 側が管理します。したがって①の運用負荷がそのまま消えます。\nさらに CodeBuild は**成果物を S3 に出力する際、KMS キーで自動的に暗号化**します（既定では AWS マネージドキー、カスタマー管理キーの指定も可能）。追加の実装なしに②も満たせます。\n設問が「**最も保守しやすい方法**」を問うている以上、サーバーの管理そのものをなくす D が最適解です。\n\n【誤りの選択肢】\nA: **Systems Manager でパッチ適用を自動化しても、EC2 インスタンスの管理責任は残ります**（Jenkins 本体やプラグインのアップグレードは別途必要）。また **EBS ボリュームの暗号化は「インスタンスのディスク」を守るだけ**で、成果物そのものの暗号化とは要件が異なります。\n\nC: **AWS Secrets Manager は認証情報やAPIキーなどのシークレットを保管するサービス**であり、ビルド成果物を暗号化する機能はありません。用途がまったく異なります。\n\nB: 詳細は下記の【要注意】を参照。\n\n【覚えるポイント】\n・**「保守しやすい / 運用オーバーヘッド最小」→ マネージドサービスに寄せる**。サーバーを持たない選択肢を優先する\n・**CodeBuild は成果物を KMS で自動暗号化**（既定は AWS マネージドキー、CMK も指定可）\n・**Secrets Manager = シークレットの保管**。データやファイルの暗号化サービスではない\n・EBS 暗号化 = ディスクの保護。**「成果物の暗号化」という要件とは対象が違う**ことに注意\n\n【要注意：B を選ぶ人が多い問題】\nB は 2 つの課題に一見どちらも答えているように見えます。\n・Jenkins を ECS に移せば EC2 のパッチ適用から解放される\n・S3 のデフォルト暗号化を有効にすれば成果物は暗号化される\nどちらも技術的には正しく、B は「実現できない案」ではありません。\n\nそれでも D が正解になるのは、**B では Jenkins 自体の保守が残る**からです。ECS に載せても、Jenkins 本体のバージョンアップ、プラグインの更新と互換性の検証、コンテナイメージの再ビルドといった作業は誰かがやり続ける必要があります。「パッチ適用とアップグレードが必要です」という問題文の記述は、**EC2 の OS だけでなく Jenkins という製品そのものの保守を指している**と読むべきです。\nD は Jenkins を捨ててマネージドサービスに置き換えるため、この保守作業が丸ごと消えます。設問が「最も保守しやすい（most maintainable）」という**最上級**で問うている以上、部分的な改善である B ではなく、負荷の源を消す D が答えになります。\n\n見分け方のコツ: **「最も〜」という最上級の設問**では、「動く案」がいくつあっても、**課題の根本を残しているか／消しているか**で優劣がつきます。自己管理のソフトウェアを AWS のマネージドサービスに置き換える選択肢があれば、それが本命であることが多いです。",
+    refs: [
+      { label:"CodeBuild: ビルド出力アーティファクトの暗号化", url:"https://docs.aws.amazon.com/ja_jp/codebuild/latest/userguide/security-encryption.html" },
+      { label:"AWS Secrets Manager とは（シークレットの保管）", url:"https://docs.aws.amazon.com/ja_jp/secretsmanager/latest/userguide/intro.html" }
+    ]
+  },
+  {
+    id: "Q022",
+    domain: "構成管理と IaC",
+    type: "single",
+    question: "IT チームは、社内の他のユーザーがアプリケーションを迅速かつ確実にデプロイおよび終了できるように、AWS CloudFormation テンプレートを作成しました。このテンプレートは、アプリケーションをインストールするためのユーザーデータスクリプトと、アプリケーションの実行中に静的ウェブページを配信するために使用する Amazon S3 バケットを備えた Amazon EC2 インスタンスを作成します。CloudFormation スタックが削除されると、すべてのリソースが削除されるはずです。しかし、チームは、スタックの削除中に CloudFormation がエラーを報告し、スタックによって作成された S3 バケットが削除されないことに気づきました。\n\nすべてのリソースがエラーなく削除されるように、チームは最も効率的な方法でこのエラーを解決するにはどうすればよいでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"S3 バケットリソースに DeletePolicy 属性を追加し、その値を Delete に設定することで、スタックが削除されたときにバケットも強制的に削除されるようにします。" },
+      { id:"B", text:"DependsOn 属性で S3 バケットと IAM ロールを指定する AWS Lambda 関数を含むカスタムリソースを追加します。RequestType が Delete の場合に、バケットからすべてのオブジェクトを削除する Lambda 関数を作成します。" },
+      { id:"C", text:"削除されなかったリソースを特定します。S3 バケットを手動で空にしてから削除します。" },
+      { id:"D", text:"EC2 および S3 バケットのリソースを単一の AWS OpsWorks Stacks リソースに置き換えます。スタック用に、EC2 インスタンスと S3 バケットを作成および削除するためのカスタムレシピを定義します。" }
+    ],
+    answer: ["B"],
+    explanation: "【正解 B】\nまず原因の理解が重要です。**Amazon S3 は、オブジェクトが 1 つでも残っているバケットを削除できません。** このテンプレートではアプリケーションが実行中に静的ウェブページをバケットへ書き込むため、スタック削除時にはバケットが空ではなく、CloudFormation の削除が失敗します。\n\n解決策は「**バケットを削除する前に中身を空にする**」処理を CloudFormation の削除フローに組み込むことです。これを実現するのが **カスタムリソース（Custom Resource）** です。\n・カスタムリソースは作成／更新／削除の各タイミングで Lambda 関数を呼び出せます\n・Lambda 側で **`RequestType` が `Delete`** のときにバケット内の全オブジェクトを削除するよう実装します\n・**`DependsOn`** でカスタムリソースと S3 バケットの依存関係を宣言しておくと、削除時は依存関係の**逆順**（カスタムリソース → バケット）で処理されるため、空になってからバケットが削除されます\nこれによりスタック削除が毎回自動で成功するようになり、テンプレートを使う社内の他ユーザーも意識せずに済みます。\n\n【誤りの選択肢】\nA: **`DeletePolicy` という属性は存在しません。** 正しくは **`DeletionPolicy`** で、指定できる値は `Delete` / `Retain` / `Snapshot` です。しかも **`Delete` は既定値**であり、これを明示しても「中身が入ったバケットを強制削除する」動作にはなりません。属性名も効果も誤っています。\n\nC: 手動でバケットを空にする運用は、**問題文の「社内の他のユーザーが迅速かつ確実にデプロイおよび終了できるように」という目的に反します。** スタックを削除するたびに人手が必要になり、「最も効率的な方法」にもなりません。\n\nD: **AWS OpsWorks Stacks は Chef / Puppet ベースの構成管理サービス**で、S3 バケットの中身を空にする問題とは無関係です。テンプレート全体を作り直す必要があり、効率的でもありません（なお OpsWorks Stacks は提供終了済みのサービスです）。\n\n【覚えるポイント】\n・**中身のある S3 バケットは削除できない** → スタック削除失敗の典型パターン\n・**CloudFormation で標準機能では足りない処理を差し込む = カスタムリソース（Lambda バックド）**。`RequestType` は `Create` / `Update` / `Delete` の 3 種\n・**`DeletionPolicy`**（正しい属性名）の値は `Delete`（既定）/ `Retain` / `Snapshot`。**`DeletePolicy` は架空**\n・`DependsOn` は作成順を制御し、**削除時はその逆順**になる\n・「手動で対処する」選択肢は、自動化・効率化を問う DOP ではほぼ誤答",
+    refs: [
+      { label:"CloudFormation: カスタムリソース", url:"https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/template-custom-resources.html" },
+      { label:"CloudFormation: DeletionPolicy 属性", url:"https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-attribute-deletionpolicy.html" }
+    ]
+  },
+  {
+    id: "Q023",
+    domain: "SDLC の自動化",
+    type: "multi",
+    pick: 2,
+    question: "ある企業は、eu-west-1 リージョンの Amazon S3 バケットで構成された AWS CodePipeline パイプラインを持っています。このパイプラインは、同じリージョンに AWS Lambda アプリケーションをデプロイします。パイプラインは、AWS CodeBuild プロジェクトのビルドアクションと AWS CloudFormation のデプロイアクションで構成されています。CodeBuild プロジェクトは、AWS CLI コマンドの aws cloudformation package を使用して、Lambda 関数のコードの .zip ファイルと CloudFormation テンプレートを含む成果物を作成します。CloudFormation のデプロイアクションは、CodeBuild プロジェクトのビルドアクションの出力成果物から CloudFormation テンプレートを参照します。\nこの企業は、eu-west-1 リージョンのパイプラインを使用して、Lambda アプリケーションを us-east-1 リージョンにもデプロイしたいと考えています。DevOps エンジニアは既に CodeBuild プロジェクトを更新し、aws cloudformation package コマンドを使用して us-east-1 用の追加出力成果物を作成するようにしました。\n\nこれらの要件を満たすために、どのような追加手順の組み合わせを実行する必要がありますか？（2 つ選択してください）",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"CloudFormation テンプレートを修正し、Lambda 関数コードの zip ファイルの場所を指定するパラメータを追加します。パイプラインに us-east-1 リージョン用の新しい CloudFormation デプロイアクションを作成します。新しいデプロイアクションを設定し、us-east-1 リージョンのアーティファクトの場所をパラメータの上書きとして渡すようにします。" },
+      { id:"B", text:"パイプラインに、us-east-1 用の新しい CloudFormation デプロイアクションを作成します。新しいデプロイアクションで、us-east-1 の出力成果物から CloudFormation テンプレートを使用するように設定します。" },
+      { id:"C", text:"us-east-1 リージョンに S3 バケットを作成します。CodePipeline が読み取りおよび書き込みアクセス権限を持つように、S3 バケットポリシーを設定します。" },
+      { id:"D", text:"us-east-1 リージョンに S3 バケットを作成します。eu-west-1 リージョンの S3 バケットから us-east-1 リージョンの S3 バケットへの S3 クロスリージョンレプリケーション (CRR) を設定します。" },
+      { id:"E", text:"パイプラインを変更して、us-east-1 の S3 バケットをアーティファクトストアとして含めます。パイプラインに us-east-1 用の新しい CloudFormation デプロイアクションを作成します。新しいデプロイアクションを構成して、us-east-1 の出力アーティファクトの CloudFormation テンプレートを使用するようにします。" }
+    ],
+    answer: ["C","E"],
+    explanation: "【正解 C・E】\nCodePipeline の**クロスリージョンアクション**を使う際の大原則は次の通りです。\n\n**「アクションを実行する各リージョンに、そのリージョンのアーティファクトストア（S3 バケット）が必要」**\n\nCodePipeline は成果物を S3 経由で受け渡しますが、**S3 バケットはリージョンをまたげません**。したがって us-east-1 でデプロイアクションを実行するには、us-east-1 にもアーティファクトストアが必要です。CodePipeline は eu-west-1 の成果物を us-east-1 のバケットへ自動的にコピーしてから、そのリージョンのアクションを実行します。\n\n**C: us-east-1 に S3 バケットを作成し、CodePipeline が読み書きできるようバケットポリシーを設定**\nこれがクロスリージョンアクションの前提条件です。\n\n**E: パイプラインの設定に us-east-1 のバケットをアーティファクトストアとして登録し、us-east-1 用の CloudFormation デプロイアクションを追加**\nパイプライン定義の `artifactStores`（リージョンごとのマップ）に us-east-1 を追加し、新しいデプロイアクションで us-east-1 用の出力成果物を参照します。\n\n【誤りの選択肢】\nA: パラメータの上書きで zip の場所を渡すという回りくどい実装をしていますが、**そもそも us-east-1 のアーティファクトストアがなければクロスリージョンアクション自体が構成できません。** また `aws cloudformation package` は既にリージョンごとの成果物を作っているので、パラメータ化は不要です。\n\nD: **S3 クロスリージョンレプリケーション（CRR）は CodePipeline のアーティファクト受け渡しの仕組みではありません。** CodePipeline はクロスリージョンアクションの際に自分で成果物をコピーします。CRR を設定してもパイプラインはそのバケットをアーティファクトストアとして認識しません。また非同期レプリケーションのため、デプロイ時点でファイルが揃っている保証もありません。\n\nB: 詳細は下記の【要注意】を参照。\n\n【覚えるポイント】\n・**CodePipeline のクロスリージョンアクション = アクションを実行する各リージョンにアーティファクトストア（S3 バケット）が必須**\n・成果物のコピーは **CodePipeline が自動で行う**。CRR や手動コピーは不要（むしろ誤答パターン）\n・Lambda のクロスリージョンデプロイでは、**`aws cloudformation package` をリージョンごとに実行**して、それぞれのリージョンの S3 にコードをアップロードする必要がある（S3 バケットはリージョンをまたげないため）\n・**パイプライン自体は 1 つのリージョンに存在**し、そこから他リージョンのアクションを実行できる\n\n【要注意：B を選ぶ人が多い問題】\nB は E から「アーティファクトストアの追加」を取り除いた内容で、**両者は非常によく似ています。** 「デプロイアクションを追加すればいいのでは」と考えて B を選ぶと、C との組み合わせで一見成立しそうにも見えます。\n\nしかし **C + B では不完全です。** C は「バケットを作ってポリシーを設定する」だけで、**そのバケットをパイプラインのアーティファクトストアとして登録する手順が抜けています。** CodePipeline は自動でバケットを見つけてはくれないので、パイプライン定義に明示的に登録する必要があります。E にはその登録手順が含まれているため、C + E で初めて構成が完結します。\n\n見分け方のコツ: **選択肢 B と E のように「片方がもう片方の部分集合」になっている**場合、出題者は「不足している 1 手順」を問うています。差分がどこかを見比べて、**その差分が要件に必要かどうか**を判断してください。本問では「アーティファクトストアとして含める」という一句が決定的でした。",
+    refs: [
+      { label:"CodePipeline: クロスリージョンアクションの追加", url:"https://docs.aws.amazon.com/ja_jp/codepipeline/latest/userguide/actions-create-cross-region.html" },
+      { label:"aws cloudformation package コマンド", url:"https://docs.aws.amazon.com/cli/latest/reference/cloudformation/package.html" }
+    ]
+  },
+  {
+    id: "Q024",
+    domain: "耐障害性の高いクラウドソリューション",
+    type: "single",
+    question: "ある企業が、1 つの Amazon EC2 インスタンス上でアプリケーションを実行しています。アプリケーションのメタデータは Amazon S3 に保存されており、インスタンスが再起動された場合は取得する必要があります。また、インスタンスが応答しなくなった場合は、自動的に再起動または復旧する必要があります。\n\nこれらの要件を満たすソリューションはどれでしょうか？",
+    questionEn: "",
+    choices: [
+      { id:"A", text:"StatusCheckFailed メトリック用の Amazon CloudWatch アラームを作成します。recover アクションを使用してインスタンスを停止および起動します。インスタンスが再び起動して実行状態になったときに、S3 イベント通知を使用してメタデータをインスタンスにプッシュします。" },
+      { id:"B", text:"AWS OpsWorks を設定し、自動修復機能を使用してインスタンスを停止および起動します。OpsWorks のライフサイクルイベントを使用して、Amazon S3 からメタデータを取得し、インスタンス上で更新します。" },
+      { id:"C", text:"EC2 Auto Recovery を使用して、障害発生時にインスタンスを自動的に停止および起動します。インスタンスが復旧して実行状態になったときに、S3 イベント通知を使用してメタデータをインスタンスにプッシュします。" },
+      { id:"D", text:"AWS CloudFormation を使用して、EC2 リソースの UserData プロパティを含む EC2 インスタンスを作成します。UserData に、Amazon S3 からアプリケーションのメタデータを取得するコマンドを追加します。" }
+    ],
+    answer: ["B"],
+    explanation: "【正解 B】\n要件は 2 つあり、**両方を同時に満たす選択肢**を選ぶ必要があります。\n① **インスタンスが応答しなくなったら自動的に復旧する**\n② **インスタンスが再起動されたら S3 からメタデータを取得する**\n\nAWS OpsWorks Stacks には次の 2 つの機能があり、この 2 要件にそのまま対応します。\n・**自動修復（Auto Healing）** … OpsWorks エージェントからの通信が途絶えたインスタンスを、自動的に停止・再起動して復旧させる → ①を満たす\n・**ライフサイクルイベント（Setup / Configure / Deploy / Undeploy / Shutdown）** … インスタンスの起動時などに任意のレシピを実行できる。Setup イベントで S3 からメタデータを取得する処理を書けば、再起動のたびに自動で取得される → ②を満たす\n\n【誤りの選択肢】\nA・C: **復旧の仕組み（CloudWatch アラームの recover アクション／EC2 Auto Recovery）は正しいのですが、メタデータの取得方法が誤っています。** 詳細は下記の【要注意】を参照。\n\nD: UserData でメタデータを取得する部分は妥当ですが、**①の「応答しなくなったときに自動復旧する」仕組みが一切ありません。** 要件の半分しか満たしていません。また UserData は既定ではインスタンスの初回起動時にしか実行されない点にも注意が必要です。\n\n【覚えるポイント】\n・**S3 イベント通知の送信先は SNS / SQS / Lambda / EventBridge のみ。EC2 インスタンスに直接「プッシュ」することはできない**（これが A・C を切る決め手）\n・EC2 の自動復旧の手段\n　- **CloudWatch アラーム + recover アクション**（`StatusCheckFailed_System` が対象）\n　- **EC2 Auto Recovery**（既定で有効な簡易版）\n　- **Auto Scaling グループ（min=max=1）** … ヘルスチェック失敗で入れ替え\n・**要件が 2 つある問題では、選択肢ごとに「①を満たすか／②を満たすか」を表にして消去する**のが確実\n・UserData は既定では**初回起動時のみ**実行される（毎回実行するには cloud-init の設定変更が必要）\n\n【補足：OpsWorks Stacks について】\nAWS OpsWorks Stacks は 2024 年 5 月にサポート終了（提供終了）となったサービスです。現在の実務でこの構成を新規採用することはありませんが、**本問は「自動修復 + ライフサイクルイベント」という機能の組み合わせを問う出題**であり、試験問題としては B が正解になります。実務では Auto Scaling グループ（min=max=1）と、起動時にメタデータを取得する UserData／SSM の組み合わせが現代的な解になります。\n\n【要注意：A・C を選ぶ人が多い問題】\nA と C は、**復旧の仕組みとしては完全に正しい**内容です。`StatusCheckFailed` を監視して recover アクションを実行する構成は EC2 の自動復旧として教科書的で、DOP でも頻出のパターンです。そのため「復旧の話が正しいから」と A や C を選んでしまいがちです。\n\nしかし両者とも後半に**「S3 イベント通知を使用してメタデータをインスタンスにプッシュします」**と書かれています。ここが致命的な誤りです。**S3 イベント通知が送れる先は SNS・SQS・Lambda・EventBridge に限られ、EC2 インスタンスへ直接プッシュする経路は存在しません。** また仮に Lambda を経由したとしても、「インスタンスが起動したとき」ではなく「S3 にオブジェクトが置かれたとき」に発火するため、タイミングも要件と合いません。\n\n見分け方のコツ: **選択肢の前半が正しくても、後半に実在しない連携が書かれていれば誤答**です。長い選択肢では前半で納得して読み飛ばしがちなので、**「AがBにプッシュする」といった記述を見たら、その経路が本当に存在するかを必ず確認**してください。",
+    refs: [
+      { label:"Amazon S3 イベント通知の送信先", url:"https://docs.aws.amazon.com/ja_jp/AmazonS3/latest/userguide/EventNotifications.html" },
+      { label:"EC2 インスタンスの復旧（CloudWatch アラームアクション）", url:"https://docs.aws.amazon.com/ja_jp/AWSEC2/latest/UserGuide/ec2-instance-recover.html" }
+    ]
   }
 ];
 /* ===================== 問題データ ここまで ===================== */
